@@ -9,5 +9,5 @@ const firebaseConfig = {
 };
 
 const ADMIN_UIDS = [
-  "test"
+  "37KCQRcgyjYPFZdj14uNJpCiKZk2"
 ];
