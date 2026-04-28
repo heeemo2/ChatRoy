@@ -4,148 +4,164 @@
 
 /* ── Screen Manager ── */
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById(id);
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('active');
+  });
+  var el = document.getElementById(id);
   if (el) el.classList.add('active');
-  // reset scroll
-  if (el) el.scrollTop = 0;
 }
 
 function openModal(id) {
-  const m = document.getElementById(id);
+  var m = document.getElementById(id);
   if (!m) return;
   m.style.display = 'flex';
-  requestAnimationFrame(() => m.classList.add('open'));
+  requestAnimationFrame(function() { m.classList.add('open'); });
 }
 
 function closeModal(id) {
-  const m = document.getElementById(id);
+  var m = document.getElementById(id);
   if (!m) return;
   m.classList.remove('open');
-  setTimeout(() => { m.style.display = ''; }, 300);
+  setTimeout(function() { m.style.display = ''; }, 300);
 }
 
 /* ── Global State ── */
-let _appUser          = null;
-let _appUserData      = null;
-let _presenceInterval = null;
-let _userDataListener = null;
-let _appBooted        = false;
+var _appUser          = null;
+var _appUserData      = null;
+var _presenceInterval = null;
+var _userDataListener = null;
 
 /* ── DOM Ready ── */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
 
   // Modal backdrop close
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', e => {
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
       if (e.target === overlay) closeModal(overlay.id);
     });
   });
 
-  // Init auth UI
-  AuthModule.init();
+  // Init auth UI buttons
+  if (typeof AuthModule !== 'undefined') {
+    AuthModule.init();
+  }
 
   // Init bottom nav
   _initBottomNav();
 
-  // Start Firebase or show auth
-  if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
+  // Start Firebase only if ready
+  if (typeof firebase !== 'undefined' &&
+      typeof FIREBASE_READY !== 'undefined' &&
+      FIREBASE_READY === true) {
     _startAuthListener();
   } else {
     showScreen('screen-auth');
-    console.warn('ChatVibe: أضف بيانات Firebase في firebase-config.js');
   }
+
 });
 
 /* ── Bottom Nav ── */
 function _initBottomNav() {
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.nav-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
       btn.classList.add('active');
-      const tab = btn.dataset.tab;
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      const panel = document.getElementById('tab-' + tab);
+
+      var tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-panel').forEach(function(p) {
+        p.classList.remove('active');
+      });
+      var panel = document.getElementById('tab-' + tab);
       if (panel) panel.classList.add('active');
 
-      // Reload data when switching tabs
-      if (tab === 'friends' && _appUser) FriendsModule.loadFriends();
-      if (tab === 'rooms'   && _appUser) RoomsModule.listenRooms();
+      // Reload data on tab switch
+      if (tab === 'friends' && _appUser && typeof FriendsModule !== 'undefined') {
+        FriendsModule.loadFriends();
+      }
     });
   });
 }
 
 /* ── Firebase Auth Listener ── */
 function _startAuthListener() {
-  auth.onAuthStateChanged(async (user) => {
+  auth.onAuthStateChanged(function(user) {
     if (!user) {
       _cleanup();
       showScreen('screen-auth');
-      _appBooted = false;
       return;
     }
 
     _appUser = user;
 
-    try {
-      const snap = await db.ref('users/' + user.uid).once('value');
-
+    db.ref('users/' + user.uid).once('value').then(function(snap) {
       if (!snap.exists()) {
-        // First time — show setup wizard
-        ProfileModule.showSetup(user);
-        // Watch for profile creation completion
-        const setupWatcher = db.ref('users/' + user.uid).on('value', profileSnap => {
+        // First time — setup wizard
+        if (typeof ProfileModule !== 'undefined') {
+          ProfileModule.showSetup(user);
+        }
+        // Watch for profile creation
+        var watcher = db.ref('users/' + user.uid).on('value', function(profileSnap) {
           if (profileSnap.exists()) {
-            db.ref('users/' + user.uid).off('value', setupWatcher);
+            db.ref('users/' + user.uid).off('value', watcher);
             _bootApp(user, profileSnap.val());
           }
         });
       } else {
         _bootApp(user, snap.val());
       }
-    } catch(e) {
-      console.error('Auth state error:', e);
+    }).catch(function(e) {
+      console.error('DB read error:', e);
       showScreen('screen-auth');
-    }
+    });
   });
 }
 
 /* ── Boot App ── */
-async function _bootApp(user, userData) {
+function _bootApp(user, userData) {
   _appUser     = user;
   _appUserData = userData;
 
-  // Live user data listener — updates profile + badges in real time
+  // Live profile updates
   if (_userDataListener) {
     db.ref('users/' + user.uid).off('value', _userDataListener);
   }
-  _userDataListener = db.ref('users/' + user.uid).on('value', snap => {
-    const fresh = snap.val();
+  _userDataListener = db.ref('users/' + user.uid).on('value', function(snap) {
+    var fresh = snap.val();
     if (!fresh) return;
     _appUserData = fresh;
-    ProfileModule.renderProfileTab(user, fresh);
+    if (typeof ProfileModule !== 'undefined') {
+      ProfileModule.renderProfileTab(user, fresh);
+    }
   });
 
-  // Init all modules
-  try { ChatModule.init(user, userData); }    catch(e) { console.error('ChatModule:', e); }
-  try { RoomsModule.init(user, userData); }   catch(e) { console.error('RoomsModule:', e); }
-  try { FriendsModule.init(user, userData); } catch(e) { console.error('FriendsModule:', e); }
+  // Init modules safely
+  try { ChatModule.init(user, userData); }    catch(e) { console.error('Chat:', e); }
+  try { RoomsModule.init(user, userData); }   catch(e) { console.error('Rooms:', e); }
+  try { FriendsModule.init(user, userData); } catch(e) { console.error('Friends:', e); }
   try { FriendsModule.listenRequestCount(user.uid); } catch(e) {}
   try { ProfileModule.renderProfileTab(user, userData); } catch(e) { console.error('Profile:', e); }
 
   // XP & presence
-  try { await ProfileModule.checkDailyLogin(user.uid); } catch(e) {}
-  try { _presenceInterval = ProfileModule.startPresenceTracking(user.uid); } catch(e) {}
+  ProfileModule.checkDailyLogin(user.uid).catch(function(e) {});
+  try {
+    _presenceInterval = ProfileModule.startPresenceTracking(user.uid);
+  } catch(e) {}
 
-  // Reset nav to rooms tab
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const roomsNav = document.querySelector('.nav-btn[data-tab="rooms"]');
+  // Reset to rooms tab
+  document.querySelectorAll('.nav-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  var roomsNav = document.querySelector('.nav-btn[data-tab="rooms"]');
   if (roomsNav) roomsNav.classList.add('active');
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  const roomsPanel = document.getElementById('tab-rooms');
+
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.remove('active');
+  });
+  var roomsPanel = document.getElementById('tab-rooms');
   if (roomsPanel) roomsPanel.classList.add('active');
 
-  _appBooted = true;
   showScreen('screen-app');
 }
 
@@ -156,21 +172,20 @@ function _cleanup() {
     _presenceInterval = null;
   }
   if (_userDataListener && _appUser) {
-    try { db.ref('users/' + _appUser.uid).off('value', _userDataListener); } catch(e) {}
+    try {
+      db.ref('users/' + _appUser.uid).off('value', _userDataListener);
+    } catch(e) {}
     _userDataListener = null;
   }
-  try { if (RoomsModule.destroy)   RoomsModule.destroy(); }   catch(e) {}
-  try { if (FriendsModule.destroy) FriendsModule.destroy(); } catch(e) {}
+  try { RoomsModule.destroy(); }   catch(e) {}
+  try { FriendsModule.destroy(); } catch(e) {}
 
-  // Clear online status
   if (_appUser) {
     try {
       db.ref('users/' + _appUser.uid + '/online').set(false);
-      db.ref('users/' + _appUser.uid + '/lastSeen')
-        .set(firebase.database.ServerValue.TIMESTAMP);
     } catch(e) {}
   }
 
-  _appUser = _appUserData = null;
-  _appBooted = false;
+  _appUser = null;
+  _appUserData = null;
 }
