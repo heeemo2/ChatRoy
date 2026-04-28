@@ -296,7 +296,14 @@ html, body {
 }
 
 /* Tab panels */
-.tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.tab-panel {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  height: 100%;
+}
 .tab-panel.active { display: flex; }
 
 /* ── Panel Header ── */
@@ -973,4 +980,77 @@ body {
   max-height: 200px;
   overflow-y: auto;
   box-shadow: var(--shadow-card);
+}
+
+/* ══════════════════════════════════════
+   APP SCREEN LAYOUT FIX
+══════════════════════════════════════ */
+#screen-app {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+}
+#screen-app.active {
+  display: flex !important;
+}
+
+/* app-content fills between header and bottom nav */
+#screen-app .app-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0; /* nav is fixed, not inside flow */
+}
+
+/* Each tab fills content area */
+#screen-app .tab-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+#screen-app .tab-panel.active {
+  display: flex;
+}
+
+/* rooms-list, friends-list scroll inside tab */
+.rooms-list,
+.friends-list,
+.profile-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bottom nav always on top */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  height: var(--nav-h);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+/* Add bottom padding so content not hidden behind nav */
+#tab-rooms,
+#tab-friends {
+  padding-bottom: var(--nav-h);
+}
+
+/* Profile scroll needs bottom nav space */
+#tab-profile .profile-scroll {
+  padding-bottom: calc(var(--nav-h) + 20px);
 }
