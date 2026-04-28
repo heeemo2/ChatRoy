@@ -481,18 +481,21 @@ html, body {
 
 /* Chat input — ثابت في الأسفل دائماً */
 .chat-input-area {
-  padding: 10px 12px;
-  padding-bottom: max(10px, env(safe-area-inset-bottom));
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border);
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
-}
 
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+
+  padding: 10px 12px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
 .emoji-btn {
   width: 38px; height: 38px; border-radius: 50%;
   background: var(--bg-input); border: 1px solid var(--border);
