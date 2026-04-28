@@ -49,29 +49,45 @@ const FriendsModule = (() => {
     });
   }
 
-  async function _doSearch(q) {
-    _clearList('<div class="spinner"></div>');
-    try {
+  // في friends.js — استبدل دالة _doSearch بهذه:
+async function _doSearch(q) {
+  _clearList('<div class="spinner"></div>');
+  try {
+    let results = [];
+    
+    // ✅ إذا الـ query أرقام فقط → ابحث بالـ id6
+    if (/^\d+$/.test(q)) {
+      const snap = await db.ref('users')
+        .orderByChild('id6')
+        .equalTo(q)
+        .once('value');
+      snap.forEach(child => {
+        if (child.key !== _currentUser.uid) results.push({ uid: child.key, ...child.val() });
+      });
+    } else {
+      // ابحث بالاسم كالمعتاد
       const snap = await db.ref('users')
         .orderByChild('usernameLower')
         .startAt(q.toLowerCase())
         .endAt(q.toLowerCase() + '\uf8ff')
         .limitToFirst(20).once('value');
-      const results = [];
       snap.forEach(child => {
         if (child.key !== _currentUser.uid) results.push({ uid: child.key, ...child.val() });
       });
-      if (!results.length) return _clearList('<div class="empty-state"><div class="empty-icon">😕</div><p>لا نتائج</p></div>');
-      const list = document.getElementById('friends-list');
-      list.innerHTML = '';
-      results.forEach(u => {
-        const isFriend = _userData.friends && _userData.friends[u.uid];
-        const hasSent  = _userData.requests && _userData.requests[u.uid] === 'sent';
-        const card = _buildCard(u.uid, u, isFriend ? 'friend' : hasSent ? 'sent' : 'none');
-        list.appendChild(card);
-      });
-    } catch(e) { _clearList('<div class="empty-state"><p>خطأ في البحث</p></div>'); }
-  }
+    }
+    
+    if (!results.length) return _clearList('<div class="empty-state"><div class="empty-icon">😕</div><p>لا نتائج</p></div>');
+    const list = document.getElementById('friends-list');
+    list.innerHTML = '';
+    results.forEach(u => {
+      const isFriend = _userData.friends && _userData.friends[u.uid];
+      const hasSent  = _userData.requests && _userData.requests[u.uid] === 'sent';
+      const card = _buildCard(u.uid, u, isFriend ? 'friend' : hasSent ? 'sent' : 'none');
+      list.appendChild(card);
+    });
+  } catch(e) { _clearList('<div class="empty-state"><p>خطأ في البحث</p></div>'); }
+}
+
 
   /* ── Load Friends ── */
   function loadFriends() {
