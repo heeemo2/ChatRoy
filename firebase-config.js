@@ -17,8 +17,8 @@ const firebaseConfig = {
 
 // Admin UIDs — أضف UIDs الأدمن هنا بعد التسجيل
 const ADMIN_UIDS = [
-37KCQRcgyjYPFZdj14uNJpCiKZk2];
-
+  "37KCQRcgyjYPFZdj14uNJpCiKZk2"
+];
 // ════════════════════════════════════════
 //  Safe init — never crashes the page
 // ════════════════════════════════════════
