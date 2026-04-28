@@ -13,9 +13,8 @@ SETUP WIZARD
 ══════════════════════════════ */
 function showSetup(user) {
 _currentUser = user;
-showScreen(‘screen-setup’);
-_step1();
-}
+showScreen('screen-setup');
+_step1();}
 
 function _step1() {
 _showStep(‘setup-step-1’);
