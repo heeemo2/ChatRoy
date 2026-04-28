@@ -131,6 +131,7 @@ const ProfileModule = (() => {
      PROFILE TAB
   ══════════════════════════════ */
   function renderProfileTab(user, userData) {
+    if (!user || !userData) return; // guard against null
     _currentUser = user;
     _userData    = userData;
 
