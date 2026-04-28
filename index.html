@@ -244,16 +244,16 @@
     </button>
   </div>
   <div class="chat-messages" id="chat-messages"></div>
-  <div class="chat-input-area">
-  <div id="emoji-picker-room" class="emoji-picker hidden" style="position:absolute;bottom:70px;left:0;right:0;z-index:50">
-    <button class="emoji-btn" id="btn-emoji-room">😊</button>
-    <textarea class="chat-input" id="room-chat-input" placeholder="اكتب رسالة..." rows="1"></textarea>
-    <button class="send-btn" id="btn-send-room">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-    </button>
-  </div>
-  <div class="members-panel" id="members-panel"></div>
+  <!-- بعد (صحيح) -->
+<div class="chat-input-area" style="position:relative">
+  <div id="emoji-picker-room" class="emoji-picker hidden"></div>
+  <button class="emoji-btn" id="btn-emoji-room">😊</button>
+  <textarea class="chat-input" id="room-chat-input" placeholder="اكتب رسالة..." rows="1"></textarea>
+  <button class="send-btn" id="btn-send-room">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+  </button>
 </div>
+
 
 <!-- ════════════════════════════════
      PRIVATE CHAT SCREEN
@@ -274,17 +274,16 @@
     <div class="typing-dots"><span></span><span></span><span></span></div>
     يكتب...
   </div>
-  <div class="chat-input-area">
-
-  <textarea class="chat-input" id="private-chat-input" placeholder="اكتب رسالة..." rows="1"></textarea>
-
+  <!-- بعد (صحيح) -->
+<div class="chat-input-area" style="position:relative">
+  <div id="emoji-picker-private" class="emoji-picker hidden"></div>
   <button class="emoji-btn" id="btn-emoji-private">😊</button>
-
+  <textarea class="chat-input" id="private-chat-input" placeholder="اكتب رسالة..." rows="1"></textarea>
   <button class="send-btn" id="btn-send-private">
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-    </svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
   </button>
+</div>
+
 
   <!-- فقط الإيموجي -->
   <div id="emoji-picker-private" class="emoji-picker hidden"></div>
