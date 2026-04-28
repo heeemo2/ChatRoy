@@ -174,19 +174,82 @@ const ProfileModule = (() => {
     _setEl('stat-days',     userData.loginDays     || 0);
 
     // Badges grid
-    const grid = document.getElementById('badges-grid');
-    if (grid) {
-      grid.innerHTML = '';
-      Object.keys(BADGE_DEFS).forEach(key => {
-        const earned = badges.includes(key);
-        const def = BADGE_DEFS[key];
-        const item = document.createElement('div');
-        item.className = 'badge-item' + (earned ? '' : ' locked');
-        item.innerHTML = buildBadgeSVG(key) +
-          '<span class="badge-name">' + def.name + '</span>';
-        grid.appendChild(item);
-      });
-    }
+    // Badges grid — شارة واحدة لكل نوع (الأعلى مستوى)
+const grid = document.getElementById('badges-grid');
+if (grid) {
+  grid.innerHTML = '';
+
+  // تعريف المجموعات: كل مجموعة = شارة واحدة تُعرض
+  const BADGE_GROUPS = [
+    {
+      key: 'friends',
+      name: 'الأصدقاء',
+      tiers: [
+        { key: 'friends_bronze', label: 'برونزي', req: '5 أصدقاء' },
+        { key: 'friends_silver', label: 'فضي',    req: '20 صديق' },
+        { key: 'friends_gold',   label: 'ذهبي',   req: '50 صديق' },
+        { key: 'friends_diamond',label: 'ماسي',   req: '100 صديق' },
+      ]
+    },
+    {
+      key: 'login',
+      name: 'الحضور اليومي',
+      tiers: [
+        { key: 'login_bronze', label: 'برونزي', req: '7 أيام' },
+        { key: 'login_silver', label: 'فضي',    req: '30 يوم' },
+        { key: 'login_gold',   label: 'ذهبي',   req: '100 يوم' },
+        { key: 'login_diamond',label: 'ماسي',   req: '365 يوم' },
+      ]
+    },
+    {
+      key: 'room',
+      name: 'نشاط الغرف',
+      tiers: [
+        { key: 'room_bronze', label: 'برونزي', req: '100 رسالة' },
+        { key: 'room_silver', label: 'فضي',    req: '500 رسالة' },
+        { key: 'room_gold',   label: 'ذهبي',   req: '2000 رسالة' },
+        { key: 'room_diamond',label: 'ماسي',   req: '10000 رسالة' },
+      ]
+    },
+    {
+      key: 'special_admin',
+      name: 'أدمن',
+      tiers: [{ key: 'admin_badge', label: 'خاصة', req: 'خاصة' }]
+    },
+    {
+      key: 'special_founder',
+      name: 'مؤسس',
+      tiers: [{ key: 'founder', label: 'خاصة', req: 'خاصة' }]
+    },
+    {
+      key: 'special_legend',
+      name: 'أسطوري',
+      tiers: [{ key: 'legend', label: 'خاصة', req: 'المستوى 100' }]
+    },
+  ];
+
+  BADGE_GROUPS.forEach(group => {
+    // أعلى مستوى حصل عليه المستخدم في هذه المجموعة
+    let topEarnedIdx = -1;
+    group.tiers.forEach((tier, i) => {
+      if (badges.includes(tier.key)) topEarnedIdx = i;
+    });
+
+    const hasAny = topEarnedIdx >= 0;
+    const displayKey = hasAny ? group.tiers[topEarnedIdx].key : group.tiers[0].key;
+
+    const item = document.createElement('div');
+    item.className = 'badge-item' + (hasAny ? '' : ' locked');
+    item.innerHTML =
+      buildBadgeSVG(displayKey) +
+      '<span class="badge-name">' + group.name + '</span>';
+
+    // عند الضغط — popup المستويات
+    item.onclick = () => _showBadgeDetail(group, badges);
+    grid.appendChild(item);
+  });
+}
+
 
     // Action buttons
     const editBioBtn = document.getElementById('btn-edit-bio');
