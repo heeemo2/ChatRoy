@@ -63,7 +63,7 @@ const ChatModule = (() => {
     _sendSysMsg(roomId,
       (adminUser || role === 'admin' || role === 'owner')
         ? { text: '🔥 دخول أسطوري: ' + _userData.username, legendary: true }
-        : { text: '🚪 دخل: ' + _userData.username, legendary: false }
+        : { text: ' دخل: ' + _userData.username, legendary: false }
     );
 
     _listenRoomMsgs(roomId);
