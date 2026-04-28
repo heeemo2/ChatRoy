@@ -892,52 +892,108 @@ html, body {
 /* ── Firebase banner ── */
 #fb-banner + * { margin-top: 50px; }
 
+
 /* ══════════════════════════════════════
-   iOS KEYBOARD & CHAT LAYOUT FIX
+   LAYOUT — FINAL CLEAN VERSION
 ══════════════════════════════════════ */
 
-/* منع iOS Safari من تغيير حجم الصفحة عند فتح الكيبورد */
-html {
-  height: -webkit-fill-available;
+/* All screens fixed fullscreen */
+.screen {
+  position: fixed !important;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 100%;
+  display: none !important;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-primary);
+  z-index: 1;
 }
-body {
-  min-height: -webkit-fill-available;
+.screen.active {
+  display: flex !important;
+  z-index: 10;
 }
 
-/* شاشات الدردشة — الهيكل الصحيح */
-#screen-room,
-#screen-private {
+/* ── APP SCREEN ── */
+#screen-app {
+  flex-direction: column;
+}
+#screen-app .app-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  height: 100dvh;
-  overflow: hidden;
-  position: fixed;
-  inset: 0;
+  /* leave space for bottom nav */
+  padding-bottom: var(--nav-h);
 }
-
-/* منطقة الرسائل — تملأ المساحة المتبقية وتسكرول للأعلى */
-#screen-room .chat-messages,
-#screen-private .chat-messages,
-#screen-private #private-messages {
+#screen-app .tab-panel {
+  display: none;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+#screen-app .tab-panel.active {
+  display: flex;
+}
+.rooms-list,
+.friends-list {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.profile-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-h) + 20px);
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed !important;
+  bottom: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+}
+
+/* ── CHAT SCREENS ── */
+#screen-room,
+#screen-private {
+  flex-direction: column;
+}
+#screen-room .chat-header,
+#screen-private .chat-header {
+  flex: 0 0 auto;
+}
+#screen-room .chat-messages,
+#screen-private #private-messages,
+#screen-private .chat-messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
-
-/* منطقة الكتابة — ثابتة في الأسفل دائماً */
 #screen-room .chat-input-area,
 #screen-private .chat-input-area {
   flex: 0 0 auto;
-  flex-shrink: 0;
   position: relative;
   z-index: 20;
   background: var(--bg-secondary);
@@ -948,26 +1004,15 @@ body {
   align-items: center;
   gap: 8px;
 }
-
-/* الهيدر ثابت في الأعلى */
-#screen-room .chat-header,
-#screen-private .chat-header {
-  flex: 0 0 auto;
-  flex-shrink: 0;
-}
-
-/* Typing indicator ثابت فوق الإدخال */
 #typing-indicator {
   flex: 0 0 auto;
-  flex-shrink: 0;
 }
 
-/* إصلاح الـ emoji picker ليظهر فوق منطقة الكتابة */
+/* ── EMOJI PICKER above input ── */
 .emoji-picker {
-  position: absolute;
+  position: absolute !important;
   bottom: 100%;
-  left: 0;
-  right: 0;
+  left: 0; right: 0;
   margin-bottom: 4px;
   z-index: 50;
   background: var(--bg-card);
@@ -981,76 +1026,24 @@ body {
   overflow-y: auto;
   box-shadow: var(--shadow-card);
 }
+.emoji-picker.hidden { display: none !important; }
 
-/* ══════════════════════════════════════
-   APP SCREEN LAYOUT FIX
-══════════════════════════════════════ */
-#screen-app {
-  display: none;
-  flex-direction: column;
-  height: 100%;
-  height: 100dvh;
-  overflow: hidden;
-  position: fixed;
-  inset: 0;
-}
-#screen-app.active {
-  display: flex !important;
-}
-
-/* app-content fills between header and bottom nav */
-#screen-app .app-content {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 0; /* nav is fixed, not inside flow */
-}
-
-/* Each tab fills content area */
-#screen-app .tab-panel {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-}
-#screen-app .tab-panel.active {
-  display: flex;
-}
-
-/* rooms-list, friends-list scroll inside tab */
-.rooms-list,
-.friends-list,
-.profile-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Bottom nav always on top */
-.bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 100;
-  height: var(--nav-h);
-  padding-bottom: env(safe-area-inset-bottom);
+/* ── MEMBERS PANEL ── */
+.members-panel {
+  position: absolute;
+  top: var(--header-h); right: 0; bottom: 60px;
+  width: 220px;
   background: var(--bg-secondary);
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 12px;
+  z-index: 20;
+  transform: translateX(100%);
+  transition: transform .3s;
 }
+.members-panel.open { transform: translateX(0); }
 
-/* Add bottom padding so content not hidden behind nav */
-#tab-rooms,
-#tab-friends {
-  padding-bottom: var(--nav-h);
-}
-
-/* Profile scroll needs bottom nav space */
-#tab-profile .profile-scroll {
-  padding-bottom: calc(var(--nav-h) + 20px);
+/* iOS height fix */
+@supports (-webkit-touch-callout: none) {
+  .screen { height: -webkit-fill-available; }
 }
