@@ -61,7 +61,7 @@ const RoomsModule = (() => {
       '<div class="room-avatar">' + sanitize(room.avatar || '🏠') + '</div>' +
       '<div class="room-info">' +
         '<div class="room-name">' + sanitize(room.name) + '</div>' +
-        '<div class="room-online">' + (room.usersOnline || 0) + ' متواجد</div>' +
+        '<div class="room-online">' + (typeof room.usersOnline === 'object' ? Object.keys(room.usersOnline||{}).length : (room.usersOnline||0)) + ' متواجد</div>' +
       '</div>';
     card.addEventListener('click', () => ChatModule.openRoom(room.id, room));
     return card;
