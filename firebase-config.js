@@ -23,7 +23,7 @@ const firebaseConfig = {
 //  وضعه هنا بين علامتي التنصيص
 // ════════════════════════════════════════
 const ADMIN_UIDS = [
-  "37KCQRcgyjYPFZdj14uNJpCiKZk2",
+  "jBvCAZ10dKNxNHJVCidWhi6J7W22",
 ];
 
 // ════════════════════════════════════════
