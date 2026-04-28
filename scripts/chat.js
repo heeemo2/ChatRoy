@@ -63,7 +63,7 @@ const ChatModule = (() => {
     _sendSysMsg(roomId,
       (adminUser || role === 'admin' || role === 'owner')
         ? { text: '🔥 دخول أسطوري: ' + _userData.username, legendary: true }
-        : { text: ' دخل: ' + _userData.username, legendary: false }
+        : { text: '🚪 دخل: ' + _userData.username, legendary: false }
     );
 
     _listenRoomMsgs(roomId);
@@ -89,23 +89,17 @@ const ChatModule = (() => {
     });
   }
 
-  // في chat.js — استبدل _listenRoomMsgs بهذه:
-function _listenRoomMsgs(roomId) {
-  const msgsEl = document.getElementById('chat-messages');
-  if (!msgsEl) return;
-  msgsEl.innerHTML = '';
-  
-  // ✅ فقط الرسائل الجديدة من لحظة الدخول
-  const joinTime = Date.now();
-  const ref = db.ref('messages/' + roomId).orderByChild('timestamp').startAt(joinTime);
-  
-  _msgListener = ref.on('child_added', snap => {
-    const msg = snap.val(); if (!msg) return;
-    msgsEl.appendChild(_buildBubble(snap.key, msg, roomId));
-    _scrollToBottom(msgsEl);
-  });
-}
-
+  function _listenRoomMsgs(roomId) {
+    const msgsEl = document.getElementById('chat-messages');
+    if (!msgsEl) return;
+    msgsEl.innerHTML = '';
+    const ref = db.ref('messages/' + roomId).orderByChild('timestamp').limitToLast(100);
+    _msgListener = ref.on('child_added', snap => {
+      const msg = snap.val(); if (!msg) return;
+      msgsEl.appendChild(_buildBubble(snap.key, msg, roomId));
+      _scrollToBottom(msgsEl);
+    });
+  }
 
   function _buildBubble(msgId, msg, roomId) {
     if (msg.type === 'system') {
@@ -268,16 +262,16 @@ function _listenRoomMsgs(roomId) {
      PRIVATE CHAT
   ══════════════════════════════ */
   async function openPrivateChat(peerUid, peerData) {
+    if (!peerUid || !_currentUser) return;
     _cleanupPrivate();
     _peerUid  = peerUid;
     _chatId   = getChatId(_currentUser.uid, peerUid);
 
-    if (!peerData || !peerData.username) {
-      try {
-        const snap = await db.ref('users/' + peerUid).once('value');
-        _peerData = snap.val() || {};
-      } catch(e) { _peerData = {}; }
-    } else { _peerData = peerData; }
+    // Always fetch fresh peer data
+    try {
+      const snap = await db.ref('users/' + peerUid).once('value');
+      _peerData = snap.val() || peerData || {};
+    } catch(e) { _peerData = peerData || {}; }
 
     showScreen('screen-private');
 
