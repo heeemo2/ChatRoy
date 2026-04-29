@@ -129,7 +129,11 @@ const ChatModule = (() => {
     const content = document.createElement('div');
     content.className = 'msg-content';
     content.innerHTML =
-      '<div class="msg-sender ' + (isAdm ? 'admin-name' : '') + '">' + sanitize(msg.senderName || '') + '</div>' +
+'<div class="msg-sender ' + (isAdm ? 'admin-name' : '') + '">' +
+  sanitize(msg.senderName || '') +
+  (msg.senderBadge ? '<span class="msg-badge">' + buildBadgeSVG(msg.senderBadge) + '</span>' : '') +
+'</div>' +
+
       '<div class="msg-bubble">' + sanitize(msg.text) + '</div>' +
       '<div class="msg-time">' + formatTime(msg.timestamp) + '</div>';
 
@@ -243,14 +247,20 @@ const ChatModule = (() => {
     if (!text) return;
     input.value = '';
     try {
-      await db.ref('messages/' + roomId).push({
-        senderId: _currentUser.uid,
-        senderName: _userData.username,
-        senderAvatar: _userData.avatar || '👤',
-        text, type: 'text',
-        isAdmin: isAdmin(_currentUser.uid),
-        timestamp: firebase.database.ServerValue.TIMESTAMP,
-      });
+      const userSnap = await db.ref('users/' + _currentUser.uid).once('value');
+const userVal = userSnap.val() || {};
+const topBadge = _getTopBadge(userVal.badges || []);
+
+await db.ref('messages/' + roomId).push({
+  senderId: _currentUser.uid,
+  senderName: _userData.username,
+  senderAvatar: _userData.avatar || '👤',
+  senderBadge: topBadge || null,
+  text, type: 'text',
+  isAdmin: isAdmin(_currentUser.uid),
+  timestamp: firebase.database.ServerValue.TIMESTAMP,
+});
+
       // XP +1 per message (cap 200/day)
       const snap = await db.ref('users/' + _currentUser.uid).once('value');
       const u = snap.val(); if (!u) return;
@@ -396,6 +406,21 @@ const ChatModule = (() => {
       db.ref('typing/' + _chatId + '/' + _currentUser.uid).set(false);
     }
   }
+function _getTopBadge(badges) {
+  if (!badges || !badges.length) return null;
+  const bestPerCat = {};
+  for (const key of badges) {
+    const def = BADGE_DEFS[key];
+    if (!def) continue;
+    const { cat, tier } = def;
+    if (cat === 'special') { bestPerCat[key] = { key, tier }; continue; }
+    if (!bestPerCat[cat] || tier > bestPerCat[cat].tier) {
+      bestPerCat[cat] = { key, tier };
+    }
+  }
+  return Object.values(bestPerCat)
+    .sort((a, b) => b.tier - a.tier)[0]?.key || null;
+}
 
   return { init, openRoom, openPrivateChat };
 })();
