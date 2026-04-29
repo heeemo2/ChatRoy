@@ -46,7 +46,7 @@ requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
 AVATAR ELEMENT BUILDER
 ══════════════════════════════ */
 function _buildAvatarEl(userData, size = 36) {
-const div = document.createElement(‘div’);
+const div = document.createElement('div');
 div.className = ‘msg-avatar’;
 div.style.width  = size + ‘px’;
 div.style.height = size + ‘px’;
