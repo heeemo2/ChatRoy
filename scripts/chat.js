@@ -93,13 +93,21 @@ const ChatModule = (() => {
     const msgsEl = document.getElementById('chat-messages');
     if (!msgsEl) return;
     msgsEl.innerHTML = '';
-    const ref = db.ref('messages/' + roomId).orderByChild('timestamp').limitToLast(100);
+
+    const joinedAt = Date.now();
+
+    const ref = db.ref('messages/' + roomId)
+      .orderByChild('timestamp')
+      .startAt(joinedAt)
+      .limitToLast(100);
+
     _msgListener = ref.on('child_added', snap => {
       const msg = snap.val(); if (!msg) return;
       msgsEl.appendChild(_buildBubble(snap.key, msg, roomId));
       _scrollToBottom(msgsEl);
     });
   }
+
 
   function _buildBubble(msgId, msg, roomId) {
     if (msg.type === 'system') {
