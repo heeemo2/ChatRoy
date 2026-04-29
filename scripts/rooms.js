@@ -11,9 +11,29 @@ const RoomsModule = (() => {
   function init(user, userData) {
     _currentUser = user;
     _userData    = userData;
+    _updateRoomsHeader(user, userData);
     _ensurePublicRoom();
     _bindCreateRoom();
     listenRooms();
+  }
+
+  /* ── تحديث هيدر الغرف بصورة واسم المستخدم ── */
+  function _updateRoomsHeader(user, userData) {
+    const avatarEl = document.getElementById('rooms-user-avatar');
+    const nameEl   = document.getElementById('rooms-header-username');
+    if (avatarEl && userData) avatarEl.textContent = userData.avatar || '👤';
+    if (nameEl   && userData) nameEl.textContent   = userData.username || '—';
+    // عند النقر على الصورة يفتح الملف الشخصي
+    if (avatarEl) {
+      avatarEl.onclick = () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const profileNav = document.querySelector('.nav-btn[data-tab="profile"]');
+        if (profileNav) profileNav.classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        const profilePanel = document.getElementById('tab-profile');
+        if (profilePanel) profilePanel.classList.add('active');
+      };
+    }
   }
 
   async function _ensurePublicRoom() {
@@ -30,44 +50,72 @@ const RoomsModule = (() => {
   }
 
   function listenRooms() {
-  const list = document.getElementById('rooms-list');
-  if (!list) return;
+    const list = document.getElementById('rooms-list');
+    if (!list) return;
+    list.innerHTML = '<div class="spinner"></div>';
 
-  list.innerHTML = '<div class="spinner"></div>';
+    if (_roomsRef) db.ref('rooms').off('value', _roomsRef);
 
-  const roomsRef = db.ref('rooms');
+    _roomsRef = db.ref('rooms').on('value', snap => {
+      list.innerHTML = '';
+      const rooms = [];
+      snap.forEach(child => rooms.push({ id: child.key, ...child.val() }));
 
-  roomsRef.on('value', snap => {
-    list.innerHTML = '';
+      // ── غرفتي: أول غرفة يملكها المستخدم الحالي ──
+      const myRoom     = rooms.find(r => r.ownerId === _currentUser.uid);
+      const otherRooms = rooms.filter(r => r.ownerId !== _currentUser.uid);
 
-    const rooms = [];
+      // عرض غرفتي في الأعلى
+      const mySection = document.getElementById('my-room-section');
+      const myCardEl  = document.getElementById('my-room-card');
+      if (myRoom && mySection && myCardEl) {
+        mySection.style.display = 'block';
+        myCardEl.innerHTML = _buildMyRoomHTML(myRoom);
+        myCardEl.onclick = () => ChatModule.openRoom(myRoom.id, myRoom);
+      } else if (mySection) {
+        mySection.style.display = 'none';
+      }
 
-    snap.forEach(child => {
-      rooms.push({ id: child.key, ...child.val() });
+      // عرض باقي الغرف في الشبكة 2×2
+      if (!otherRooms.length && !myRoom) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
+        return;
+      }
+      otherRooms.forEach(r => list.appendChild(_buildCard(r)));
     });
+  }
 
-    const pub  = rooms.find(r => r.id === PUBLIC_ROOM_ID);
-    const priv = rooms.filter(r => r.id !== PUBLIC_ROOM_ID);
+  /* ── بناء بطاقة غرفتي (كبيرة - كامل العرض) ── */
+  function _buildMyRoomHTML(room) {
+    const online = typeof room.usersOnline === 'object'
+      ? Object.keys(room.usersOnline || {}).length
+      : (room.usersOnline || 0);
+    return `
+      <span class="my-room-badge">غرفتي</span>
+      <div class="my-room-body">
+        <div class="my-room-avatar">${sanitize(room.avatar || '🏠')}</div>
+        <div class="my-room-info">
+          <div class="my-room-name">${sanitize(room.name)}</div>
+          <div class="my-room-stats">0 👁</div>
+          <div class="my-room-online">${online} متواجد</div>
+        </div>
+      </div>
+    `;
+  }
 
-    if (pub) list.appendChild(_buildCard(pub));
-    priv.forEach(r => list.appendChild(_buildCard(r)));
-
-    if (!rooms.length) {
-      list.innerHTML =
-        '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
-    }
-  });
-}
-
+  /* ── بناء بطاقة غرفة عادية (شبكة 2×2) ── */
   function _buildCard(room) {
     const card = document.createElement('div');
     card.className = 'room-card';
+    const online = typeof room.usersOnline === 'object'
+      ? Object.keys(room.usersOnline || {}).length
+      : (room.usersOnline || 0);
     card.innerHTML =
       (room.isPublic ? '<span class="public-room-badge">عام</span>' : '') +
       '<div class="room-avatar">' + sanitize(room.avatar || '🏠') + '</div>' +
       '<div class="room-info">' +
         '<div class="room-name">' + sanitize(room.name) + '</div>' +
-        '<div class="room-online">' + (typeof room.usersOnline === 'object' ? Object.keys(room.usersOnline||{}).length : (room.usersOnline||0)) + ' متواجد</div>' +
+        '<div class="room-online">' + online + ' متواجد</div>' +
       '</div>';
     card.addEventListener('click', () => ChatModule.openRoom(room.id, room));
     return card;
@@ -76,9 +124,10 @@ const RoomsModule = (() => {
   function _bindCreateRoom() {
     const btn = document.getElementById('btn-create-room');
     if (btn) btn.onclick = () => openModal('modal-create-room');
+
     const saveBtn = document.getElementById('btn-save-room');
     if (saveBtn) saveBtn.onclick = _createRoom;
-    
+
     _bindFilterTabs();
   }
 
@@ -88,6 +137,7 @@ const RoomsModule = (() => {
       tab.addEventListener('click', () => {
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
+        // يمكن إضافة منطق فلترة هنا لاحقاً
       });
     });
   }
@@ -109,10 +159,8 @@ const RoomsModule = (() => {
       closeModal('modal-create-room');
       document.getElementById('room-name-input').value   = '';
       document.getElementById('room-avatar-input').value = '';
-    } catch(e) {
-  console.error("ROOM CREATE ERROR:", e);
-  showToast('خطأ في الإنشاء');
-}
+    } catch(e) { showToast('خطأ في الإنشاء'); }
+    if (btn) btn.disabled = false;
   }
 
   async function banUser(roomId, targetUid) {
