@@ -675,6 +675,17 @@ html, body {
 .badge-item svg, .badge-item canvas { width: 56px; height: 56px; }
 .badge-item .badge-name { font-size: 10px; color: var(--text-secondary); text-align: center; }
 .badge-item.locked { opacity: 0.35; filter: grayscale(1); }
+.msg-badge {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 4px;
+  width: 18px;
+  height: 18px;
+}
+.msg-badge svg {
+  width: 18px;
+  height: 18px;
+}
 
 /* Profile stats */
 .profile-stats {
