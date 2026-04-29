@@ -59,35 +59,36 @@ const RoomsModule = (() => {
     _roomsRef = db.ref('rooms').on('value', snap => {
       list.innerHTML = '';
 
-
-      // ── غرفتي: أول غرفة يملكها المستخدم الحالي ──
       const rooms = [];
-snap.forEach(child => rooms.push({ id: child.key, ...child.val() }));
+      snap.forEach(child => rooms.push({ id: child.key, ...child.val() }));
 
-const myRooms = rooms.filter(r => r.ownerId === _currentUser.uid);
-const otherRooms = rooms.filter(r => r.ownerId !== _currentUser.uid);
+      const myRooms = rooms.filter(r => r.ownerId === _currentUser.uid);
+      const otherRooms = rooms.filter(r => r.ownerId !== _currentUser.uid);
 
-// غرفتي (أول وحدة فقط)
-const myRoom = myRooms[0];
+      const myRoom = myRooms[0];
 
-// عرض غرفتي
-const mySection = document.getElementById('my-room-section');
-const myCardEl  = document.getElementById('my-room-card');
+      const mySection = document.getElementById('my-room-section');
+      const myCardEl  = document.getElementById('my-room-card');
 
-if (myRoom && mySection && myCardEl) {
-  mySection.style.display = 'block';
-  myCardEl.innerHTML = _buildMyRoomHTML(myRoom);
-  myCardEl.onclick = () => ChatModule.openRoom(myRoom.id, myRoom);
-} else if (mySection) {
-  mySection.style.display = 'none';
+      if (myRoom && mySection && myCardEl) {
+        mySection.style.display = 'block';
+        myCardEl.innerHTML = _buildMyRoomHTML(myRoom);
+        myCardEl.onclick = () => ChatModule.openRoom(myRoom.id, myRoom);
+      } else if (mySection) {
+        mySection.style.display = 'none';
+      }
+
+      if (!rooms.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
+        return;
+      }
+
+      otherRooms.forEach(r => {
+        list.appendChild(_buildCard(r));
+      });
+
+    });
 }
-
-// إذا مافي غرف نهائيًا
-if (!rooms.length) {
-  list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
-  return;
-}
-
 // عرض كل الغرف (بدون فقدان)
 otherRooms.forEach(r => {
   list.appendChild(_buildCard(r));
