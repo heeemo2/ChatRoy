@@ -76,9 +76,20 @@ const RoomsModule = (() => {
   function _bindCreateRoom() {
     const btn = document.getElementById('btn-create-room');
     if (btn) btn.onclick = () => openModal('modal-create-room');
-
     const saveBtn = document.getElementById('btn-save-room');
     if (saveBtn) saveBtn.onclick = _createRoom;
+    
+    _bindFilterTabs();
+  }
+
+  function _bindFilterTabs() {
+    const tabs = document.querySelectorAll('.rooms-filter-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
   }
 
   async function _createRoom() {
