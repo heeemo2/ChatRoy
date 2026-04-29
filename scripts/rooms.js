@@ -52,41 +52,59 @@ const RoomsModule = (() => {
   function listenRooms() {
     const list = document.getElementById('rooms-list');
     if (!list) return;
+
     list.innerHTML = '<div class="spinner"></div>';
 
     if (_roomsRef) db.ref('rooms').off('value', _roomsRef);
 
     _roomsRef = db.ref('rooms').on('value', snap => {
-      list.innerHTML = '';
+        list.innerHTML = '';
 
-      const rooms = [];
-      snap.forEach(child => rooms.push({ id: child.key, ...child.val() }));
+        if (!snap.exists()) {
+            list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
+            return;
+        }
 
-      const myRooms = rooms.filter(r => r.ownerId === _currentUser.uid);
-      const otherRooms = rooms.filter(r => r.ownerId !== _currentUser.uid);
+        const rooms = [];
+        snap.forEach(child => {
+            const val = child.val();
+            if (val) {
+                rooms.push({
+                    id: child.key,
+                    ...val
+                });
+            }
+        });
 
-      const myRoom = myRooms[0];
+        // لو البيانات ناقصة ما نكمل
+        if (!rooms.length) {
+            list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
+            return;
+        }
 
-      const mySection = document.getElementById('my-room-section');
-      const myCardEl  = document.getElementById('my-room-card');
+        const uid = _currentUser?.uid;
 
-      if (myRoom && mySection && myCardEl) {
-        mySection.style.display = 'block';
-        myCardEl.innerHTML = _buildMyRoomHTML(myRoom);
-        myCardEl.onclick = () => ChatModule.openRoom(myRoom.id, myRoom);
-      } else if (mySection) {
-        mySection.style.display = 'none';
-      }
+        const myRooms = uid ? rooms.filter(r => r.ownerId === uid) : [];
+        const otherRooms = uid ? rooms.filter(r => r.ownerId !== uid) : rooms;
 
-      if (!rooms.length) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
-        return;
-      }
+        const myRoom = myRooms[0];
 
-      otherRooms.forEach(r => {
-        list.appendChild(_buildCard(r));
-      });
+        const mySection = document.getElementById('my-room-section');
+        const myCardEl = document.getElementById('my-room-card');
 
+        if (myRoom && mySection && myCardEl) {
+            mySection.style.display = 'block';
+            myCardEl.innerHTML = _buildMyRoomHTML(myRoom);
+            myCardEl.onclick = () => ChatModule.openRoom(myRoom.id, myRoom);
+        } else if (mySection) {
+            mySection.style.display = 'none';
+        }
+
+        otherRooms.forEach(room => {
+            if (room) {
+                list.appendChild(_buildCard(room));
+            }
+        });
     });
 }
 // عرض كل الغرف (بدون فقدان)
