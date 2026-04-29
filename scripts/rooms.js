@@ -58,8 +58,7 @@ const RoomsModule = (() => {
 
     _roomsRef = db.ref('rooms').on('value', snap => {
       list.innerHTML = '';
-      const rooms = [];
-      snap.forEach(child => rooms.push({ id: child.key, ...child.val() }));
+
 
       // ── غرفتي: أول غرفة يملكها المستخدم الحالي ──
       const rooms = [];
