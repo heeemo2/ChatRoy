@@ -329,9 +329,105 @@ html, body {
 /* ══════════════════════════════════════
    ROOMS TAB
 ══════════════════════════════════════ */
+/* Rooms filter tabs */
+.rooms-filter-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  direction: rtl;
+}
+.rooms-filter-tab {
+  flex: 1;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  transition: all .2s;
+  font-family: inherit;
+}
+.rooms-filter-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Rooms grid */
 .rooms-list {
-  flex: 1; overflow-y: auto; padding: 12px;
-  display: flex; flex-direction: column; gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-content: start;
+}
+
+/* Room card — grid style */
+.room-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+}
+.room-card:hover { border-color: var(--accent); }
+
+.room-avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0;
+  background: var(--bg-input);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.room-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.room-info {
+  padding: 8px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.room-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.room-online {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--online);
+}
+.room-online::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--online);
+  border-radius: 50%;
+}
+
+.public-room-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
 }
 
 .room-card {
