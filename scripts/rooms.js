@@ -30,28 +30,34 @@ const RoomsModule = (() => {
   }
 
   function listenRooms() {
-    const list = document.getElementById('rooms-list');
-    if (!list) return;
-    list.innerHTML = '<div class="spinner"></div>';
+  const list = document.getElementById('rooms-list');
+  if (!list) return;
 
-    if (_roomsRef) db.ref('rooms').off('value', _roomsRef);
+  list.innerHTML = '<div class="spinner"></div>';
 
-    _roomsRef = db.ref('rooms').on('value', snap => {
-      list.innerHTML = '';
-      const rooms = [];
-      snap.forEach(child => rooms.push({ id: child.key, ...child.val() }));
+  const roomsRef = db.ref('rooms');
 
-      const pub  = rooms.find(r => r.id === PUBLIC_ROOM_ID);
-      const priv = rooms.filter(r => r.id !== PUBLIC_ROOM_ID);
+  roomsRef.on('value', snap => {
+    list.innerHTML = '';
 
-      if (pub) list.appendChild(_buildCard(pub));
-      priv.forEach(r => list.appendChild(_buildCard(r)));
+    const rooms = [];
 
-      if (!rooms.length) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
-      }
+    snap.forEach(child => {
+      rooms.push({ id: child.key, ...child.val() });
     });
-  }
+
+    const pub  = rooms.find(r => r.id === PUBLIC_ROOM_ID);
+    const priv = rooms.filter(r => r.id !== PUBLIC_ROOM_ID);
+
+    if (pub) list.appendChild(_buildCard(pub));
+    priv.forEach(r => list.appendChild(_buildCard(r)));
+
+    if (!rooms.length) {
+      list.innerHTML =
+        '<div class="empty-state"><div class="empty-icon">🏠</div><p>لا توجد غرف بعد</p></div>';
+    }
+  });
+}
 
   function _buildCard(room) {
     const card = document.createElement('div');
@@ -92,8 +98,10 @@ const RoomsModule = (() => {
       closeModal('modal-create-room');
       document.getElementById('room-name-input').value   = '';
       document.getElementById('room-avatar-input').value = '';
-    } catch(e) { showToast('خطأ في الإنشاء'); }
-    if (btn) btn.disabled = false;
+    } catch(e) {
+  console.error("ROOM CREATE ERROR:", e);
+  showToast('خطأ في الإنشاء');
+}
   }
 
   async function banUser(roomId, targetUid) {
