@@ -22,56 +22,25 @@ function getLevelProgress(xp) {
 /* ── Badge Definitions ── */
 const BADGE_DEFS = {
   // Friends badges
-  friends_bronze: { name: 'رفيق المبتدئ',  cat: 'friends', tier: 1, req: { friends: 5 } },
-  friends_silver: { name: 'رفيق الساحر',   cat: 'friends', tier: 2, req: { friends: 20 } },
-  friends_gold:   { name: 'رفيق الأساطير', cat: 'friends', tier: 3, req: { friends: 50 } },
-  friends_diamond:{ name: 'رفيق الماس',    cat: 'friends', tier: 4, req: { friends: 100 } },
+  friends_bronze: { name: 'رفيق المبتدئ', cat: 'friends', tier: 1, req: { friends: 5 } },
+  friends_silver: { name: 'رفيق الساحر',  cat: 'friends', tier: 2, req: { friends: 20 } },
+  friends_gold:   { name: 'رفيق الأساطير',cat: 'friends', tier: 3, req: { friends: 50 } },
+  friends_diamond:{ name: 'رفيق الماس',   cat: 'friends', tier: 4, req: { friends: 100 } },
   // Daily login badges
-  login_bronze:   { name: 'خبير التسجيل',  cat: 'login', tier: 1, req: { loginDays: 7 } },
-  login_silver:   { name: 'خبير التسجيل',  cat: 'login', tier: 2, req: { loginDays: 30 } },
-  login_gold:     { name: 'خبير التسجيل',  cat: 'login', tier: 3, req: { loginDays: 100 } },
-  login_diamond:  { name: 'خبير التسجيل',  cat: 'login', tier: 4, req: { loginDays: 365 } },
+  login_bronze:   { name: 'خبير التسجيل', cat: 'login', tier: 1, req: { loginDays: 7 } },
+  login_silver:   { name: 'خبير التسجيل', cat: 'login', tier: 2, req: { loginDays: 30 } },
+  login_gold:     { name: 'خبير التسجيل', cat: 'login', tier: 3, req: { loginDays: 100 } },
+  login_diamond:  { name: 'خبير التسجيل', cat: 'login', tier: 4, req: { loginDays: 365 } },
   // Room badges
   room_bronze:    { name: 'الفرقة النشيطة', cat: 'room', tier: 1, req: { messages: 100 } },
   room_silver:    { name: 'الفرقة النشيطة', cat: 'room', tier: 2, req: { messages: 500 } },
   room_gold:      { name: 'الفرقة النشيطة', cat: 'room', tier: 3, req: { messages: 2000 } },
   room_diamond:   { name: 'الفرقة النشيطة', cat: 'room', tier: 4, req: { messages: 10000 } },
   // Special
-  admin_badge:    { name: 'أدمن',   cat: 'special', tier: 4 },
-  founder:        { name: 'مؤسس',   cat: 'special', tier: 4 },
+  admin_badge:    { name: 'أدمن', cat: 'special', tier: 4 },
+  founder:        { name: 'مؤسس', cat: 'special', tier: 4 },
   legend:         { name: 'أسطوري', cat: 'special', tier: 4 },
 };
-
-/**
- * تحسب الـ badges التي وصل إليها المستخدم،
- * ثم تُرجع من كل فئة (cat) الشارة الأعلى tier فقط.
- *
- * @param {string[]} earnedKeys - مفاتيح الـ badges التي حققها المستخدم
- * @returns {string[]} - مفاتيح الـ badges التي تُعرض في البروفايل
- */
-function getProfileBadges(earnedKeys) {
-  const bestPerCat = {};
-
-  for (const key of earnedKeys) {
-    const badge = BADGE_DEFS[key];
-    if (!badge) continue;
-
-    const { cat, tier } = badge;
-
-    // للفئات الخاصة (special) نعرض كل شارة على حدة
-    if (cat === 'special') {
-      bestPerCat[key] = { key, tier };
-      continue;
-    }
-
-    // لباقي الفئات نحتفظ فقط بالأعلى tier
-    if (!bestPerCat[cat] || tier > bestPerCat[cat].tier) {
-      bestPerCat[cat] = { key, tier };
-    }
-  }
-
-  return Object.values(bestPerCat).map(entry => entry.key);
-}
 
 /* Admin gets ALL badges at max tier */
 function getAdminBadges() {
