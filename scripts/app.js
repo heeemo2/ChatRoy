@@ -4,9 +4,7 @@
 
 /* ── Screen Manager ── */
 function showScreen(id) {
-document.querySelectorAll(’.screen’).forEach(function(s) {
-s.classList.remove(‘active’);
-});
+document.querySelectorAll(’.screen’).forEach(function(s) { s.classList.remove(‘active’); });
 var el = document.getElementById(id);
 if (el) el.classList.add(‘active’);
 }
@@ -41,22 +39,13 @@ if (e.target === overlay) closeModal(overlay.id);
 });
 });
 
-// Init auth UI
-if (typeof AuthModule !== ‘undefined’) {
-AuthModule.init();
-}
-
-// Wire visible photo button → hidden trigger
-var visBtn = document.getElementById(‘btn-change-photo-visible’);
-var hidBtn = document.getElementById(‘btn-change-photo’);
-if (visBtn && hidBtn) {
-visBtn.onclick = function() { hidBtn.click(); };
-}
+// Init auth
+if (typeof AuthModule !== ‘undefined’) AuthModule.init();
 
 // Init bottom nav
 _initBottomNav();
 
-// Start Firebase only if ready
+// Start Firebase
 if (typeof firebase !== ‘undefined’ &&
 typeof FIREBASE_READY !== ‘undefined’ &&
 FIREBASE_READY === true) {
@@ -71,25 +60,16 @@ showScreen(‘screen-auth’);
 function _initBottomNav() {
 document.querySelectorAll(’.nav-btn’).forEach(function(btn) {
 btn.addEventListener(‘click’, function() {
-document.querySelectorAll(’.nav-btn’).forEach(function(b) {
-b.classList.remove(‘active’);
-});
+document.querySelectorAll(’.nav-btn’).forEach(function(b) { b.classList.remove(‘active’); });
 btn.classList.add(‘active’);
-
-```
-  var tab = btn.dataset.tab;
-  document.querySelectorAll('.tab-panel').forEach(function(p) {
-    p.classList.remove('active');
-  });
-  var panel = document.getElementById('tab-' + tab);
-  if (panel) panel.classList.add('active');
-
-  if (tab === 'friends' && _appUser && typeof FriendsModule !== 'undefined') {
-    FriendsModule.loadFriends();
-  }
+var tab = btn.dataset.tab;
+document.querySelectorAll(’.tab-panel’).forEach(function(p) { p.classList.remove(‘active’); });
+var panel = document.getElementById(‘tab-’ + tab);
+if (panel) panel.classList.add(‘active’);
+if (tab === ‘friends’ && _appUser && typeof FriendsModule !== ‘undefined’) {
+FriendsModule.loadFriends();
+}
 });
-```
-
 });
 }
 
@@ -101,30 +81,23 @@ _cleanup();
 showScreen(‘screen-auth’);
 return;
 }
-
-```
 _appUser = user;
-
-db.ref('users/' + user.uid).once('value').then(function(snap) {
-  if (!snap.exists()) {
-    if (typeof ProfileModule !== 'undefined') {
-      ProfileModule.showSetup(user);
-    }
-    var watcher = db.ref('users/' + user.uid).on('value', function(profileSnap) {
-      if (profileSnap.exists()) {
-        db.ref('users/' + user.uid).off('value', watcher);
-        _bootApp(user, profileSnap.val());
-      }
-    });
-  } else {
-    _bootApp(user, snap.val());
-  }
-}).catch(function(e) {
-  console.error('DB read error:', e);
-  showScreen('screen-auth');
+db.ref(‘users/’ + user.uid).once(‘value’).then(function(snap) {
+if (!snap.exists()) {
+if (typeof ProfileModule !== ‘undefined’) ProfileModule.showSetup(user);
+var watcher = db.ref(‘users/’ + user.uid).on(‘value’, function(profileSnap) {
+if (profileSnap.exists()) {
+db.ref(‘users/’ + user.uid).off(‘value’, watcher);
+_bootApp(user, profileSnap.val());
+}
 });
-```
-
+} else {
+_bootApp(user, snap.val());
+}
+}).catch(function(e) {
+console.error(‘DB read error:’, e);
+showScreen(‘screen-auth’);
+});
 });
 }
 
@@ -133,7 +106,6 @@ function _bootApp(user, userData) {
 _appUser     = user;
 _appUserData = userData;
 
-// Live profile updates
 if (_userDataListener) {
 db.ref(‘users/’ + user.uid).off(‘value’, _userDataListener);
 }
@@ -141,21 +113,15 @@ _userDataListener = db.ref(‘users/’ + user.uid).on(‘value’, function(sna
 var fresh = snap.val();
 if (!fresh) return;
 _appUserData = fresh;
-// Keep ChatModule userData in sync
-try { ChatModule.init(user, fresh); } catch(e) {}
-if (typeof ProfileModule !== ‘undefined’) {
-ProfileModule.renderProfileTab(user, fresh);
-}
+if (typeof ProfileModule !== ‘undefined’) ProfileModule.renderProfileTab(user, fresh);
 });
 
-// Init modules
 try { ChatModule.init(user, userData); }    catch(e) { console.error(‘Chat:’, e); }
 try { RoomsModule.init(user, userData); }   catch(e) { console.error(‘Rooms:’, e); }
 try { FriendsModule.init(user, userData); } catch(e) { console.error(‘Friends:’, e); }
 try { FriendsModule.listenRequestCount(user.uid); } catch(e) {}
 try { ProfileModule.renderProfileTab(user, userData); } catch(e) { console.error(‘Profile:’, e); }
 
-// XP & presence
 ProfileModule.checkDailyLogin(user.uid).catch(function() {});
 try { _presenceInterval = ProfileModule.startPresenceTracking(user.uid); } catch(e) {}
 
