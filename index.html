@@ -445,17 +445,5 @@
 
 <script src="scripts/app.js"></script>
 
-<!-- Wire up the visible photo button -->
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var visBtn = document.getElementById('btn-change-photo-visible');
-    var hidBtn = document.getElementById('btn-change-photo');
-    if (visBtn && hidBtn) {
-      visBtn.onclick = function() { hidBtn.click(); };
-    }
-  });
-</script>
-
 </body>
 </html>
