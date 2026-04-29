@@ -2,18 +2,19 @@
 //  CHAT.JS — Room + Private Chat
 // ═══════════════════════════════════════
 
-const ChatModule = (() => {
-let _currentUser     = null;
-let _userData        = null;
-let _roomId          = null;
-let _roomData        = null;
-let _chatId          = null;
-let _peerUid         = null;
-let _peerData        = null;
-let _msgListener     = null;
-let _memberListener  = null;
-let _typingListener  = null;
-let _onlineRef       = null;
+var ChatModule = (function() {
+var _currentUser    = null;
+var _userData       = null;
+var _roomId         = null;
+var _roomData       = null;
+var _chatId         = null;
+var _peerUid        = null;
+var _peerData       = null;
+var _msgListener    = null;
+var _memberListener = null;
+var _typingListener = null;
+var _onlineRef      = null;
+var _onlineCountRef = null;
 
 function init(user, userData) {
 _currentUser = user;
@@ -22,220 +23,232 @@ _userData    = userData;
 
 function _scrollToBottom(el) {
 if (!el) return;
-requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+requestAnimationFrame(function() { el.scrollTop = el.scrollHeight; });
 }
 
 /* ══════════════════════════════
 ROOM CHAT
 ══════════════════════════════ */
 async function openRoom(roomId, roomData) {
-const ok = await RoomsModule.canEnterRoom(roomId, _currentUser.uid);
+var ok = await RoomsModule.canEnterRoom(roomId, _currentUser.uid);
 if (!ok) return showToast(‘🚫 أنت محظور من هذه الغرفة’);
 
 ```
-// Always refresh userData before entering room
-try {
-  const uSnap = await db.ref('users/' + _currentUser.uid).once('value');
-  if (uSnap.val()) _userData = uSnap.val();
-} catch(e) {}
-
 _cleanupRoom();
 _roomId   = roomId;
 _roomData = roomData;
 
 showScreen('screen-room');
 
-// Header
-const hAvi  = document.getElementById('room-header-avi');
-const hName = document.getElementById('room-header-name');
-
-// Show image or emoji
-if (roomData.imageUrl) {
-  if (hAvi) hAvi.innerHTML = `<img src="${roomData.imageUrl}" alt="room"/>`;
-} else {
-  if (hAvi) hAvi.textContent = roomData.avatar || '🏠';
+// Header avatar (supports photo)
+var hAvi  = document.getElementById('room-header-avi');
+var hName = document.getElementById('room-header-name');
+if (hAvi) {
+  if (roomData.roomPhoto) {
+    hAvi.innerHTML = '<img src="' + roomData.roomPhoto + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>';
+  } else {
+    hAvi.textContent = roomData.avatar || '🏠';
+  }
 }
 if (hName) hName.textContent = roomData.name || 'غرفة';
+
+// Click on header avatar or name → room info
+var headerInfoBtn = document.getElementById('room-header-info-btn');
+if (hAvi) {
+  hAvi.onclick = function() { _showRoomInfoFromChat(roomId); };
+}
+if (headerInfoBtn) {
+  headerInfoBtn.onclick = function() { _showRoomInfoFromChat(roomId); };
+}
 
 // Online counter
 _onlineRef = db.ref('rooms/' + roomId + '/usersOnline/' + _currentUser.uid);
 _onlineRef.set(true);
 _onlineRef.onDisconnect().remove();
-db.ref('rooms/' + roomId + '/usersOnline').on('value', snap => {
-  const cnt = Object.keys(snap.val() || {}).length;
-  const el = document.getElementById('room-online-count');
+_onlineCountRef = db.ref('rooms/' + roomId + '/usersOnline').on('value', function(snap) {
+  var cnt = Object.keys(snap.val() || {}).length;
+  var el  = document.getElementById('room-online-count');
   if (el) el.textContent = cnt + ' متواجد';
 });
 
 // Join message
-const adminUser = isAdmin(_currentUser.uid);
-const role = _getRole(roomId, roomData);
+var adminUser = isAdmin(_currentUser.uid);
+var role = _getRole(roomId, roomData);
 _sendSysMsg(roomId,
   (adminUser || role === 'admin' || role === 'owner')
-    ? { text: '🔥 دخول أسطوري: ' + (_userData.username || ''), legendary: true }
-    : { text: '🚪 دخل: ' + (_userData.username || ''), legendary: false }
+    ? { text: '🔥 دخول أسطوري: ' + _userData.username, legendary: true }
+    : { text: '🚪 دخل: ' + _userData.username, legendary: false }
 );
 
 _listenRoomMsgs(roomId);
 _listenMembers(roomId, roomData);
 _buildRoomInput(roomId);
 
-// Back
-document.getElementById('btn-room-back').onclick = () => {
+document.getElementById('btn-room-back').onclick = function() {
   _cleanupRoom();
   showScreen('screen-app');
 };
 
-// Members panel toggle
-document.getElementById('btn-room-members').onclick = () => {
+document.getElementById('btn-room-members').onclick = function() {
   document.getElementById('members-panel').classList.toggle('open');
 };
-
-// Room header click → show room info modal
-const headerInfo = document.getElementById('room-header-info-btn');
-if (headerInfo) {
-  headerInfo.onclick = () => _showRoomInfoModal(roomId, roomData);
-}
 ```
 
 }
 
-/* ── Room Info Modal ── */
-async function _showRoomInfoModal(roomId, roomData) {
-// Fetch fresh room data
-let room = roomData;
+/* ── Show room info from inside chat ── */
+async function _showRoomInfoFromChat(roomId) {
 try {
-const snap = await db.ref(‘rooms/’ + roomId).once(‘value’);
-if (snap.exists()) room = { id: roomId, …snap.val() };
-} catch(e) {}
+var snap = await db.ref(‘rooms/’ + roomId).once(‘value’);
+var room = snap.val();
+if (!room) return;
+room.id = roomId;
 
 ```
-const membersSnap = await db.ref('rooms/' + roomId + '/usersOnline').once('value');
-const onlineCnt = Object.keys(membersSnap.val() || {}).length;
-
-const joinSnap = await db.ref('rooms/' + roomId + '/members').once('value');
-const joinCnt = Object.keys(joinSnap.val() || {}).length;
-
-const modal = document.getElementById('modal-room-info');
-if (!modal) return;
-
-const imgEl = document.getElementById('room-info-img');
-if (imgEl) {
-  if (room.imageUrl) {
-    imgEl.innerHTML = `<img src="${room.imageUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
-  } else {
-    imgEl.textContent = room.avatar || '🏠';
+  var aviEl = document.getElementById('room-info-avi');
+  if (aviEl) {
+    if (room.roomPhoto) {
+      aviEl.innerHTML = '<img src="' + room.roomPhoto + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>';
+    } else {
+      aviEl.textContent = room.avatar || '🏠';
+    }
   }
-}
-const el = id => document.getElementById(id);
-if (el('room-info-name'))    el('room-info-name').textContent    = room.name || '';
-if (el('room-info-online'))  el('room-info-online').textContent  = onlineCnt + ' متواجد الآن';
-if (el('room-info-members')) el('room-info-members').textContent = joinCnt + ' عضو منضم';
-if (el('room-info-type'))    el('room-info-type').textContent    = room.isPublic ? '🌍 غرفة عامة' : '🔒 غرفة خاصة';
+  var nameEl = document.getElementById('room-info-name');
+  if (nameEl) nameEl.textContent = room.name || 'الغرفة';
 
-// Admin controls: change room image
-const imgCtrl = document.getElementById('room-info-img-ctrl');
-if (imgCtrl) {
-  if (isAdmin(_currentUser.uid) || room.ownerId === _currentUser.uid) {
-    imgCtrl.classList.remove('hidden');
-    imgCtrl.onclick = () => {
-      const inp = document.createElement('input');
-      inp.type = 'file'; inp.accept = 'image/*';
-      inp.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        showToast('جارٍ الرفع...');
-        try {
-          const storageRef = storage.ref('rooms/' + roomId + '/cover');
-          await storageRef.put(file);
-          const url = await storageRef.getDownloadURL();
-          await db.ref('rooms/' + roomId + '/imageUrl').set(url);
-          showToast('تم تحديث صورة الغرفة ✓');
-          // Update header
-          const hAvi = document.getElementById('room-header-avi');
-          if (hAvi) hAvi.innerHTML = `<img src="${url}" alt="room"/>`;
-          if (imgEl) imgEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
-          closeModal('modal-room-info');
-        } catch(err) {
-          showToast('خطأ في الرفع');
-        }
-      };
-      inp.click();
-    };
-  } else {
-    imgCtrl.classList.add('hidden');
+  var membCount = typeof room.members === 'object' ? Object.keys(room.members || {}).length : 0;
+  var onlCount  = typeof room.usersOnline === 'object' ? Object.keys(room.usersOnline || {}).length : 0;
+  var membersEl = document.getElementById('room-info-members');
+  var onlineEl  = document.getElementById('room-info-online');
+  if (membersEl) membersEl.textContent = membCount;
+  if (onlineEl)  onlineEl.textContent  = onlCount;
+
+  // Already inside room — show "أنت داخل الغرفة"
+  var joinSection = document.getElementById('room-info-join-section');
+  if (joinSection) {
+    joinSection.innerHTML = '<div style="text-align:center;color:var(--online);font-size:13px;padding:8px">🟢 أنت داخل الغرفة الآن</div>';
   }
-}
 
-openModal('modal-room-info');
+  // Admin photo change
+  var adminSection = document.getElementById('room-info-admin-section');
+  if (adminSection) {
+    var canEdit = isAdmin(_currentUser.uid) || room.ownerId === _currentUser.uid ||
+      (room.admins && room.admins[_currentUser.uid]);
+    adminSection.style.display = canEdit ? 'block' : 'none';
+    if (canEdit) {
+      var changeBtn = document.getElementById('btn-change-room-photo');
+      var photoIn   = document.getElementById('room-photo-change-input');
+      if (changeBtn && photoIn) {
+        changeBtn.onclick = function() { photoIn.click(); };
+        photoIn.onchange = async function(e) {
+          var file = e.target.files[0]; if (!file) return;
+          try {
+            showToast('جارٍ رفع الصورة...');
+            var dataURL = await fileToDataURL(file);
+            var resized = await resizeImage(dataURL, 600, 400);
+            await db.ref('rooms/' + roomId + '/roomPhoto').set(resized);
+            showToast('تم تحديث صورة الغرفة ✓');
+            closeModal('modal-room-info');
+            // Update header avatar
+            if (hAvi) hAvi.innerHTML = '<img src="' + resized + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>';
+          } catch(err) { showToast('فشل رفع الصورة'); }
+          photoIn.value = '';
+        };
+      }
+    }
+  }
+
+  openModal('modal-room-info');
+} catch(e) { console.error('_showRoomInfoFromChat:', e); }
 ```
 
 }
 
-function _sendSysMsg(roomId, { text, legendary }) {
+function _sendSysMsg(roomId, opts) {
 db.ref(‘messages/’ + roomId).push({
-type: ‘system’, text, legendary: !!legendary,
+type: ‘system’, text: opts.text, legendary: !!opts.legendary,
 timestamp: firebase.database.ServerValue.TIMESTAMP,
 });
 }
 
 function _listenRoomMsgs(roomId) {
-const msgsEl = document.getElementById(‘chat-messages’);
+var msgsEl = document.getElementById(‘chat-messages’);
 if (!msgsEl) return;
 msgsEl.innerHTML = ‘’;
-const ref = db.ref(‘messages/’ + roomId).orderByChild(‘timestamp’).limitToLast(100);
-_msgListener = ref.on(‘child_added’, snap => {
-const msg = snap.val(); if (!msg) return;
+var ref = db.ref(‘messages/’ + roomId).orderByChild(‘timestamp’).limitToLast(100);
+_msgListener = ref.on(‘child_added’, function(snap) {
+var msg = snap.val(); if (!msg) return;
 msgsEl.appendChild(_buildBubble(snap.key, msg, roomId));
 _scrollToBottom(msgsEl);
 });
 }
 
-/* ── Build Chat Bubble ── */
 function _buildBubble(msgId, msg, roomId) {
 if (msg.type === ‘system’) {
-const d = document.createElement(‘div’);
+var d = document.createElement(‘div’);
 d.className = ‘sys-msg’ + (msg.legendary ? ’ legendary’ : ‘’);
-d.textContent = msg.text; return d;
+d.textContent = msg.text;
+return d;
 }
-const isOwn   = msg.senderId === _currentUser.uid;
-const isAdm   = isAdmin(msg.senderId);
-const row     = document.createElement(‘div’);
-row.className = ‘msg-row’ + (isOwn ? ’ own’ : ‘’) + (isAdm ? ’ is-admin’ : ‘’);
-row.dataset.msgId = msgId;
 
 ```
-// Avatar: image or emoji
-const avi = document.createElement('div');
-avi.className = 'msg-avatar';
-if (msg.senderPhotoURL) {
-  avi.innerHTML = `<img src="${msg.senderPhotoURL}" alt="avi"/>`;
-} else {
-  avi.textContent = msg.senderAvatar || '👤';
-}
-avi.onclick = () => _showProfileSlideUp(msg.senderId);
+var isOwn = msg.senderId === _currentUser.uid;
+var isAdm = isAdmin(msg.senderId);
+var row   = document.createElement('div');
+row.className = 'msg-row' + (isOwn ? ' own' : '') + (isAdm ? ' is-admin' : '');
+row.dataset.msgId = msgId;
 
-const content = document.createElement('div');
+// Avatar (supports photo URL)
+var avi = document.createElement('div');
+avi.className = 'msg-avatar';
+var avatarVal = msg.senderAvatar || '👤';
+if (avatarVal.startsWith('data:') || avatarVal.startsWith('http')) {
+  avi.innerHTML = '<img src="' + avatarVal + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+} else {
+  avi.textContent = avatarVal;
+}
+// Click avatar → open profile (slide-up from bottom)
+avi.onclick = function() { ProfileModule.viewUserProfile(msg.senderId, _currentUser.uid); };
+
+// Fetch sender badges for inline display (top 3)
+var badgesHtml = '';
+if (msg.senderBadges && msg.senderBadges.length) {
+  var top3 = getTop3Badges(msg.senderBadges);
+  badgesHtml = top3.map(function(k) {
+    return buildBadgeSVGSmall(k);
+  }).join('');
+}
+
+var content = document.createElement('div');
 content.className = 'msg-content';
 
-// Badges HTML (top 3)
-const badgesHTML = buildMsgBadgesHTML(msg.senderBadges || []);
+// Sender row: name + 3 badges
+var senderRowHTML =
+  '<div class="msg-sender-row">' +
+    '<span class="msg-sender ' + (isAdm ? 'admin-name' : '') + '" style="cursor:pointer">' +
+      sanitize(msg.senderName || '') +
+    '</span>' +
+    (badgesHtml ? '<span class="msg-badges">' + badgesHtml + '</span>' : '') +
+  '</div>';
 
 content.innerHTML =
-  '<div class="msg-sender-row">' +
-    '<span class="msg-sender ' + (isAdm ? 'admin-name' : '') + '">' + sanitize(msg.senderName || '') + '</span>' +
-    badgesHTML +
-  '</div>' +
+  senderRowHTML +
   '<div class="msg-bubble">' + sanitize(msg.text) + '</div>' +
   '<div class="msg-time">' + formatTime(msg.timestamp) + '</div>';
 
+// Click name → open profile
+var senderSpan = content.querySelector('.msg-sender');
+if (senderSpan) {
+  senderSpan.onclick = function() { ProfileModule.viewUserProfile(msg.senderId, _currentUser.uid); };
+}
+
 // Long press context menu
-const bubble = content.querySelector('.msg-bubble');
-let longPressTimer;
-bubble.addEventListener('touchstart',  () => { longPressTimer = setTimeout(() => _ctxMenu(msgId, msg, roomId), 600); });
-bubble.addEventListener('touchend',    () => clearTimeout(longPressTimer));
-bubble.addEventListener('touchmove',   () => clearTimeout(longPressTimer));
-bubble.addEventListener('contextmenu', e  => { e.preventDefault(); _ctxMenu(msgId, msg, roomId); });
+var bubble = content.querySelector('.msg-bubble');
+var longPressTimer;
+bubble.addEventListener('touchstart',  function() { longPressTimer = setTimeout(function() { _ctxMenu(msgId, msg, roomId); }, 600); });
+bubble.addEventListener('touchend',    function() { clearTimeout(longPressTimer); });
+bubble.addEventListener('touchmove',   function() { clearTimeout(longPressTimer); });
+bubble.addEventListener('contextmenu', function(e) { e.preventDefault(); _ctxMenu(msgId, msg, roomId); });
 
 row.appendChild(isOwn ? content : avi);
 row.appendChild(isOwn ? avi : content);
@@ -244,145 +257,163 @@ return row;
 
 }
 
-/* ── Slide-up profile (bottom sheet) ── */
-async function _showProfileSlideUp(uid) {
-try {
-const snap = await db.ref(‘users/’ + uid).once(‘value’);
-const u = snap.val();
-if (!u) return;
-await ProfileModule.viewUserProfile(uid, _currentUser.uid);
-} catch(e) { console.error(‘profileSlideUp:’, e); }
-}
-
 /* ── Context Menu ── */
 function _ctxMenu(msgId, msg, roomId) {
-document.getElementById(‘ctx-menu’)?.remove();
-const role   = _getRole(roomId, _roomData);
-const canDel = msg.senderId === _currentUser.uid || role !== ‘member’ || isAdmin(_currentUser.uid);
-const canMod = (role === ‘owner’ || role === ‘admin’ || isAdmin(_currentUser.uid)) && msg.senderId !== _currentUser.uid;
+var existing = document.getElementById(‘ctx-menu’);
+if (existing) existing.remove();
 
 ```
-const menu = document.createElement('div');
+var role   = _getRole(roomId, _roomData);
+var canDel = msg.senderId === _currentUser.uid || role !== 'member' || isAdmin(_currentUser.uid);
+var canMod = (role === 'owner' || role === 'admin' || isAdmin(_currentUser.uid)) && msg.senderId !== _currentUser.uid;
+
+var menu = document.createElement('div');
 menu.id = 'ctx-menu'; menu.className = 'ctx-menu';
 menu.style.cssText = 'position:fixed;bottom:80px;right:12px;left:12px;z-index:300';
 
 if (canDel) {
-  const d = document.createElement('div');
+  var d = document.createElement('div');
   d.className = 'ctx-item danger';
   d.innerHTML = '🗑 حذف الرسالة';
-  d.onclick = async () => { await db.ref('messages/' + roomId + '/' + msgId).remove(); menu.remove(); };
+  d.onclick = async function() {
+    await db.ref('messages/' + roomId + '/' + msgId).remove();
+    menu.remove();
+  };
   menu.appendChild(d);
 }
 if (canMod && msg.senderId) {
-  const k = document.createElement('div'); k.className = 'ctx-item';
+  var k = document.createElement('div'); k.className = 'ctx-item';
   k.innerHTML = '🚪 طرد';
-  k.onclick = async () => { await RoomsModule.kickUser(roomId, msg.senderId); menu.remove(); };
+  k.onclick = async function() { await RoomsModule.kickUser(roomId, msg.senderId); menu.remove(); };
 
-  const b = document.createElement('div'); b.className = 'ctx-item danger';
+  var b = document.createElement('div'); b.className = 'ctx-item danger';
   b.innerHTML = '🚫 حظر';
-  b.onclick = async () => { await RoomsModule.banUser(roomId, msg.senderId); menu.remove(); };
+  b.onclick = async function() { await RoomsModule.banUser(roomId, msg.senderId); menu.remove(); };
 
   menu.appendChild(k); menu.appendChild(b);
 
   if (role === 'owner' || isAdmin(_currentUser.uid)) {
-    const a = document.createElement('div'); a.className = 'ctx-item';
+    var a = document.createElement('div'); a.className = 'ctx-item';
     a.innerHTML = '🛡 تعيين أدمن';
-    a.onclick = async () => { await RoomsModule.assignAdmin(roomId, msg.senderId); menu.remove(); };
+    a.onclick = async function() { await RoomsModule.assignAdmin(roomId, msg.senderId); menu.remove(); };
     menu.appendChild(a);
   }
 }
 if (!menu.children.length) return;
 document.body.appendChild(menu);
-setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 100);
+setTimeout(function() {
+  document.addEventListener('click', function() { menu.remove(); }, { once: true });
+}, 100);
 ```
 
 }
 
 /* ── Members Panel ── */
 function _listenMembers(roomId, roomData) {
-const panel = document.getElementById(‘members-panel’);
+var panel = document.getElementById(‘members-panel’);
 if (!panel) return;
 panel.innerHTML = ‘<div style="font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">المتواجدون</div>’;
-_memberListener = db.ref(‘rooms/’ + roomId + ‘/usersOnline’).on(‘value’, async snap => {
+_memberListener = db.ref(‘rooms/’ + roomId + ‘/usersOnline’).on(‘value’, async function(snap) {
 panel.innerHTML = ‘<div style="font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">المتواجدون</div>’;
-for (const uid of Object.keys(snap.val() || {})) {
+var uids = Object.keys(snap.val() || {});
+for (var i = 0; i < uids.length; i++) {
+var uid = uids[i];
 try {
-const uSnap = await db.ref(‘users/’ + uid).once(‘value’);
-const u = uSnap.val(); if (!u) continue;
-const role = uid === roomData.ownerId ? ‘owner’
+var uSnap = await db.ref(‘users/’ + uid).once(‘value’);
+var u = uSnap.val(); if (!u) continue;
+var role = uid === roomData.ownerId ? ‘owner’
 : (roomData.admins && roomData.admins[uid]) ? ‘admin’ : ‘member’;
-const row = document.createElement(‘div’);
-row.className = ‘member-row’;
-const aviHTML = u.photoURL
-? `<img src="${u.photoURL}" style="width:34px;height:34px;border-radius:50%;object-fit:cover"/>`
-: sanitize(u.avatar || ‘👤’);
-row.innerHTML =
-‘<div class="member-avi">’ + aviHTML + ‘</div>’ +
-‘<div class="member-name">’ + sanitize(u.username || ‘’) + ‘</div>’ +
-‘<div class="member-role ' + role + '">’ +
-(role === ‘owner’ ? ‘👑’ : role === ‘admin’ ? ‘🛡’ : ‘’) +
-‘</div>’;
-row.onclick = () => ProfileModule.viewUserProfile(uid, _currentUser.uid);
-panel.appendChild(row);
-} catch(e) {}
-}
+
+```
+      var badges  = isAdmin(uid) ? getAdminBadges() : (u.badges || []);
+      var top3    = getTop3Badges(badges);
+      var bHtml   = top3.map(function(k) { return buildBadgeSVGSmall(k); }).join('');
+
+      var row = document.createElement('div');
+      row.className = 'member-row';
+
+      // Avatar
+      var aviInner = '';
+      if (u.avatar && (u.avatar.startsWith('data:') || u.avatar.startsWith('http'))) {
+        aviInner = '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+      } else {
+        aviInner = sanitize(u.avatar || '👤');
+      }
+
+      row.innerHTML =
+        '<div class="member-avi">' + aviInner + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="member-name">' + sanitize(u.username || '') + '</div>' +
+          '<div class="member-badges">' + bHtml + '</div>' +
+        '</div>' +
+        '<div class="member-role ' + role + '">' +
+          (role === 'owner' ? '👑' : role === 'admin' ? '🛡' : '') +
+        '</div>';
+      row.onclick = function() { ProfileModule.viewUserProfile(uid, _currentUser.uid); };
+      panel.appendChild(row);
+    } catch(e) {}
+  }
 });
+```
+
 }
 
 /* ── Room Input ── */
 function _buildRoomInput(roomId) {
-const input   = document.getElementById(‘room-chat-input’);
-const sendBtn = document.getElementById(‘btn-send-room’);
-const emjBtn  = document.getElementById(‘btn-emoji-room’);
-const picker  = document.getElementById(‘emoji-picker-room’);
+var input   = document.getElementById(‘room-chat-input’);
+var sendBtn = document.getElementById(‘btn-send-room’);
+var emjBtn  = document.getElementById(‘btn-emoji-room’);
+var picker  = document.getElementById(‘emoji-picker-room’);
 if (!input || !sendBtn) return;
 
 ```
-sendBtn.onclick = () => _sendRoomMsg(roomId, input);
-input.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _sendRoomMsg(roomId, input); } };
+sendBtn.onclick  = function() { _sendRoomMsg(roomId, input); };
+input.onkeydown  = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _sendRoomMsg(roomId, input); }
+};
 
 picker.innerHTML = '';
-EMOJI_LIST.forEach(em => {
-  const s = document.createElement('span');
+EMOJI_LIST.forEach(function(em) {
+  var s = document.createElement('span');
   s.textContent = em;
-  s.onclick = () => { input.value += em; input.focus(); };
+  s.onclick = function() { input.value += em; input.focus(); };
   picker.appendChild(s);
 });
-emjBtn.onclick = e => { e.stopPropagation(); picker.classList.toggle('hidden'); };
-document.addEventListener('click', () => picker.classList.add('hidden'));
+emjBtn.onclick = function(e) { e.stopPropagation(); picker.classList.toggle('hidden'); };
+document.addEventListener('click', function() { picker.classList.add('hidden'); });
 ```
 
 }
 
 async function _sendRoomMsg(roomId, input) {
-const text = (input.value || ‘’).trim();
+var text = (input.value || ‘’).trim();
 if (!text) return;
 input.value = ‘’;
 try {
-// Get fresh user data for badges
-const uSnap = await db.ref(‘users/’ + _currentUser.uid).once(‘value’);
-const uData = uSnap.val() || _userData;
-const badges = isAdmin(_currentUser.uid) ? getAdminBadges() : (uData.badges || []);
+// Get fresh user data for current badges
+var userSnap = await db.ref(‘users/’ + _currentUser.uid).once(‘value’);
+var u = userSnap.val() || _userData;
+var myBadges = isAdmin(_currentUser.uid) ? getAdminBadges() : (u.badges || []);
 
 ```
   await db.ref('messages/' + roomId).push({
-    senderId: _currentUser.uid,
-    senderName: uData.username || _userData.username,
-    senderAvatar: uData.avatar || _userData.avatar || '👤',
-    senderPhotoURL: uData.photoURL || null,
-    senderBadges: badges.slice(0, 3),
-    text, type: 'text',
-    isAdmin: isAdmin(_currentUser.uid),
-    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    senderId:     _currentUser.uid,
+    senderName:   u.username || _userData.username,
+    senderAvatar: u.avatar   || _userData.avatar || '👤',
+    senderBadges: myBadges,
+    text:         text,
+    type:         'text',
+    isAdmin:      isAdmin(_currentUser.uid),
+    timestamp:    firebase.database.ServerValue.TIMESTAMP,
   });
 
   // XP +1 per message (cap 200/day)
-  const u = uData;
-  const today = new Date().toDateString();
-  const cnt = u.msgXPToday === today ? (u.msgXPCount || 0) : 0;
-  const updates = { totalMessages: (u.totalMessages || 0) + 1 };
+  if (!u) return;
+  var today = new Date().toDateString();
+  var cnt   = u.msgXPToday === today ? (u.msgXPCount || 0) : 0;
+  var updates = { totalMessages: (u.totalMessages || 0) + 1 };
   if (cnt < 200) {
-    const nx = Math.min((u.xp||0)+1, 100*XP_PER_LEVEL);
+    var nx = Math.min((u.xp || 0) + 1, 100 * XP_PER_LEVEL);
     updates.xp = nx; updates.level = getLevelFromXP(nx);
     updates.msgXPToday = today; updates.msgXPCount = cnt + 1;
   }
@@ -398,32 +429,29 @@ PRIVATE CHAT
 async function openPrivateChat(peerUid, peerData) {
 if (!peerUid || !_currentUser) return;
 _cleanupPrivate();
-_peerUid  = peerUid;
-_chatId   = getChatId(_currentUser.uid, peerUid);
+_peerUid = peerUid;
+_chatId  = getChatId(_currentUser.uid, peerUid);
 
 ```
-// Refresh own userData
 try {
-  const mySnap = await db.ref('users/' + _currentUser.uid).once('value');
-  if (mySnap.val()) _userData = mySnap.val();
-} catch(e) {}
-
-try {
-  const snap = await db.ref('users/' + peerUid).once('value');
+  var snap = await db.ref('users/' + peerUid).once('value');
   _peerData = snap.val() || peerData || {};
 } catch(e) { _peerData = peerData || {}; }
 
 showScreen('screen-private');
 
-const hAvi  = document.getElementById('private-header-avi');
-const hName = document.getElementById('private-header-name');
-const hStat = document.getElementById('private-header-status');
+// Header
+var hAvi  = document.getElementById('private-header-avi');
+var hName = document.getElementById('private-header-name');
+var hStat = document.getElementById('private-header-status');
 
-// Show photo or emoji
-if (_peerData.photoURL) {
-  if (hAvi) hAvi.innerHTML = `<img src="${_peerData.photoURL}" alt="avi" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
-} else {
-  if (hAvi) hAvi.textContent = _peerData.avatar || '👤';
+// Avatar supports photo URL
+if (hAvi) {
+  if (_peerData.avatar && (_peerData.avatar.startsWith('data:') || _peerData.avatar.startsWith('http'))) {
+    hAvi.innerHTML = '<img src="' + _peerData.avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>';
+  } else {
+    hAvi.textContent = _peerData.avatar || '👤';
+  }
 }
 if (hName) hName.textContent = _peerData.username || '...';
 if (hStat) {
@@ -431,17 +459,15 @@ if (hStat) {
   hStat.style.color = _peerData.online ? 'var(--online)' : 'var(--text-secondary)';
 }
 
-// Click on header name/avi → show profile
-if (hAvi) hAvi.style.cursor = 'pointer';
-if (hName) hName.style.cursor = 'pointer';
-const headerClick = () => ProfileModule.viewUserProfile(peerUid, _currentUser.uid);
-if (hAvi)  hAvi.onclick  = headerClick;
-if (hName) hName.onclick = headerClick;
+// Click avatar or name → open peer profile (slide-up)
+if (hAvi) hAvi.onclick = function() { ProfileModule.viewUserProfile(peerUid, _currentUser.uid); };
+var headerBtn = document.getElementById('private-header-info-btn');
+if (headerBtn) headerBtn.onclick = function() { ProfileModule.viewUserProfile(peerUid, _currentUser.uid); };
 
 _listenPrivateMsgs();
 _buildPrivateInput();
 
-document.getElementById('btn-private-back').onclick = () => {
+document.getElementById('btn-private-back').onclick = function() {
   _cleanupPrivate();
   showScreen('screen-app');
 };
@@ -450,54 +476,66 @@ document.getElementById('btn-private-back').onclick = () => {
 }
 
 function _listenPrivateMsgs() {
-const msgsEl = document.getElementById(‘private-messages’);
+var msgsEl = document.getElementById(‘private-messages’);
 if (!msgsEl) return;
 msgsEl.innerHTML = ‘’;
-const ref = db.ref(‘privateChats/’ + _chatId).orderByChild(‘timestamp’).limitToLast(100);
-_msgListener = ref.on(‘child_added’, snap => {
-const msg = snap.val(); if (!msg) return;
-const isOwn = msg.senderId === _currentUser.uid;
-const sender = isOwn ? _userData : _peerData;
-const row = document.createElement(‘div’);
-row.className = ‘msg-row’ + (isOwn ? ’ own’ : ‘’);
+var ref = db.ref(‘privateChats/’ + _chatId).orderByChild(‘timestamp’).limitToLast(100);
+_msgListener = ref.on(‘child_added’, function(snap) {
+var msg  = snap.val(); if (!msg) return;
+var isOwn = msg.senderId === _currentUser.uid;
 
 ```
-  const aviHTML = sender.photoURL
-    ? `<img src="${sender.photoURL}" alt="avi"/>`
-    : sanitize(sender.avatar || '👤');
+  var row = document.createElement('div');
+  row.className = 'msg-row' + (isOwn ? ' own' : '');
 
-  // Badges for private chat (top 3)
-  const senderBadges = isOwn
+  // Avatar
+  var avatarVal = isOwn ? (_userData.avatar || '👤') : (_peerData.avatar || '👤');
+  var aviHtml   = '';
+  if (avatarVal.startsWith('data:') || avatarVal.startsWith('http')) {
+    aviHtml = '<img src="' + avatarVal + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+  } else {
+    aviHtml = sanitize(avatarVal);
+  }
+
+  // Badges for private chat (top 3 next to name)
+  var senderBadges = isOwn
     ? (isAdmin(_currentUser.uid) ? getAdminBadges() : (_userData.badges || []))
-    : (_peerData.badges || []);
-  const badgesHTML = buildMsgBadgesHTML(senderBadges);
+    : (isAdmin(_peerUid)         ? getAdminBadges() : (_peerData.badges  || []));
+  var top3 = getTop3Badges(senderBadges);
+  var bHtml = top3.map(function(k) { return buildBadgeSVGSmall(k); }).join('');
+
+  var senderName = isOwn ? (_userData.username || '') : (_peerData.username || '');
 
   row.innerHTML =
-    '<div class="msg-avatar" style="cursor:pointer">' + aviHTML + '</div>' +
+    '<div class="msg-avatar" style="cursor:pointer">' + aviHtml + '</div>' +
     '<div class="msg-content">' +
       '<div class="msg-sender-row">' +
-        '<span class="msg-sender">' + sanitize(sender.username || '') + '</span>' +
-        badgesHTML +
+        '<span class="msg-sender" style="cursor:pointer">' + sanitize(senderName) + '</span>' +
+        (bHtml ? '<span class="msg-badges">' + bHtml + '</span>' : '') +
       '</div>' +
       '<div class="msg-bubble">' + sanitize(msg.text) + '</div>' +
       '<div class="msg-time">' + formatTime(msg.timestamp) + (isOwn && msg.seen ? ' ✔✔' : '') + '</div>' +
     '</div>';
 
-  // Click avatar → slide-up profile
-  const msgAvi = row.querySelector('.msg-avatar');
-  if (msgAvi) {
-    const clickUid = isOwn ? _currentUser.uid : _peerUid;
-    msgAvi.onclick = () => ProfileModule.viewUserProfile(clickUid, _currentUser.uid);
-  }
+  // Click avatar or name → open profile
+  var clickUid = isOwn ? _currentUser.uid : _peerUid;
+  row.querySelector('.msg-avatar').onclick = function() {
+    ProfileModule.viewUserProfile(clickUid, _currentUser.uid);
+  };
+  row.querySelector('.msg-sender').onclick = function() {
+    ProfileModule.viewUserProfile(clickUid, _currentUser.uid);
+  };
 
   msgsEl.appendChild(row);
   _scrollToBottom(msgsEl);
-  if (!isOwn && !msg.seen) db.ref('privateChats/' + _chatId + '/' + snap.key + '/seen').set(true);
+  if (!isOwn && !msg.seen) {
+    db.ref('privateChats/' + _chatId + '/' + snap.key + '/seen').set(true);
+  }
 });
 
-// Typing
-_typingListener = db.ref('typing/' + _chatId + '/' + _peerUid).on('value', snap => {
-  const el = document.getElementById('typing-indicator');
+// Typing indicator
+_typingListener = db.ref('typing/' + _chatId + '/' + _peerUid).on('value', function(snap) {
+  var el = document.getElementById('typing-indicator');
   if (el) el.classList.toggle('hidden', !snap.val());
 });
 ```
@@ -505,52 +543,51 @@ _typingListener = db.ref('typing/' + _chatId + '/' + _peerUid).on('value', snap 
 }
 
 function _buildPrivateInput() {
-const input   = document.getElementById(‘private-chat-input’);
-const sendBtn = document.getElementById(‘btn-send-private’);
-const emjBtn  = document.getElementById(‘btn-emoji-private’);
-const picker  = document.getElementById(‘emoji-picker-private’);
+var input   = document.getElementById(‘private-chat-input’);
+var sendBtn = document.getElementById(‘btn-send-private’);
+var emjBtn  = document.getElementById(‘btn-emoji-private’);
+var picker  = document.getElementById(‘emoji-picker-private’);
 if (!input || !sendBtn) return;
 
 ```
-let typingTimer;
-input.oninput = () => {
+var typingTimer;
+input.oninput = function() {
   db.ref('typing/' + _chatId + '/' + _currentUser.uid).set(true);
   clearTimeout(typingTimer);
-  typingTimer = setTimeout(() => {
+  typingTimer = setTimeout(function() {
     db.ref('typing/' + _chatId + '/' + _currentUser.uid).set(false);
   }, 2000);
 };
 
-sendBtn.onclick = () => _sendPrivateMsg(input);
-input.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _sendPrivateMsg(input); } };
+sendBtn.onclick = function() { _sendPrivateMsg(input); };
+input.onkeydown = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _sendPrivateMsg(input); }
+};
 
-if (picker) {
-  picker.innerHTML = '';
-  EMOJI_LIST.forEach(em => {
-    const s = document.createElement('span'); s.textContent = em;
-    s.onclick = () => { input.value += em; input.focus(); };
-    picker.appendChild(s);
-  });
-}
-if (emjBtn && picker) {
-  emjBtn.onclick = e => { e.stopPropagation(); picker.classList.toggle('hidden'); };
-  document.addEventListener('click', () => picker.classList.add('hidden'));
-}
+picker.innerHTML = '';
+EMOJI_LIST.forEach(function(em) {
+  var s = document.createElement('span'); s.textContent = em;
+  s.onclick = function() { input.value += em; input.focus(); };
+  picker.appendChild(s);
+});
+emjBtn.onclick = function(e) { e.stopPropagation(); picker.classList.toggle('hidden'); };
+document.addEventListener('click', function() { picker.classList.add('hidden'); });
 ```
 
 }
 
 async function _sendPrivateMsg(input) {
-const text = (input.value || ‘’).trim();
+var text = (input.value || ‘’).trim();
 if (!text) return;
 input.value = ‘’;
 try {
 db.ref(‘typing/’ + _chatId + ‘/’ + _currentUser.uid).set(false);
 await db.ref(‘privateChats/’ + _chatId).push({
-senderId: _currentUser.uid,
+senderId:   _currentUser.uid,
 senderName: _userData.username,
-text, seen: false,
-timestamp: firebase.database.ServerValue.TIMESTAMP,
+text:       text,
+seen:       false,
+timestamp:  firebase.database.ServerValue.TIMESTAMP,
 });
 } catch(e) { console.error(‘sendPrivateMsg:’, e); }
 }
@@ -564,20 +601,40 @@ return ‘member’;
 }
 
 function _cleanupRoom() {
-if (_msgListener && _roomId) { db.ref(‘messages/’ + _roomId).off(‘child_added’, _msgListener); _msgListener = null; }
-if (_memberListener && _roomId) { db.ref(‘rooms/’ + _roomId + ‘/usersOnline’).off(‘value’, _memberListener); _memberListener = null; }
+if (_msgListener && _roomId) {
+db.ref(‘messages/’ + _roomId).off(‘child_added’, _msgListener);
+_msgListener = null;
+}
+if (_memberListener && _roomId) {
+db.ref(‘rooms/’ + _roomId + ‘/usersOnline’).off(‘value’, _memberListener);
+_memberListener = null;
+}
+if (_onlineCountRef && _roomId) {
+db.ref(‘rooms/’ + _roomId + ‘/usersOnline’).off(‘value’, _onlineCountRef);
+_onlineCountRef = null;
+}
 if (_onlineRef) { _onlineRef.remove(); _onlineRef = null; }
-document.getElementById(‘members-panel’)?.classList.remove(‘open’);
-document.getElementById(‘ctx-menu’)?.remove();
+var mp = document.getElementById(‘members-panel’);
+if (mp) mp.classList.remove(‘open’);
+var cm = document.getElementById(‘ctx-menu’);
+if (cm) cm.remove();
 }
 
 function _cleanupPrivate() {
-if (_msgListener && _chatId) { db.ref(‘privateChats/’ + _chatId).off(‘child_added’, _msgListener); _msgListener = null; }
+if (_msgListener && _chatId) {
+db.ref(‘privateChats/’ + _chatId).off(‘child_added’, _msgListener);
+_msgListener = null;
+}
 if (_typingListener && _chatId && _peerUid) {
-db.ref(‘typing/’ + _chatId + ‘/’ + _peerUid).off(‘value’, _typingListener); _typingListener = null;
+db.ref(‘typing/’ + _chatId + ‘/’ + _peerUid).off(‘value’, _typingListener);
+_typingListener = null;
 db.ref(‘typing/’ + _chatId + ‘/’ + _currentUser.uid).set(false);
 }
 }
 
-return { init, openRoom, openPrivateChat };
+return {
+init: init,
+openRoom: openRoom,
+openPrivateChat: openPrivateChat,
+};
 })();
