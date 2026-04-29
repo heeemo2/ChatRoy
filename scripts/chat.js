@@ -30,7 +30,7 @@ _userCache[user.uid] = userData;
 async function _getUser(uid) {
 if (_userCache[uid]) return _userCache[uid];
 try {
-const snap = await db.ref(‘users/’ + uid).once(‘value’);
+const snap = await db.ref('users/' + uid).once('value');
 const u = snap.val() || {};
 _userCache[uid] = u;
 return u;
