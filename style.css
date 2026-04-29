@@ -1304,3 +1304,114 @@ html, body {
 }
 .badge-item.locked { opacity: 0.28; filter: grayscale(1); }
 .badge-item.locked:hover { transform: none; }
+/* ══════════════════════════════════════
+   ROOMS — هيدر جديد
+══════════════════════════════════════ */
+.rooms-top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  min-height: var(--header-h);
+  direction: rtl;
+}
+.rooms-search-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--bg-input); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-secondary);
+}
+.rooms-search-btn svg { width: 20px; height: 20px; }
+.rooms-header-title {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.rooms-header-title span { font-size: 15px; font-weight: 700; }
+.rooms-header-name-label { font-size: 11px; color: var(--text-secondary); }
+.rooms-header-user { display: flex; align-items: center; gap: 8px; }
+.rooms-user-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--bg-input); border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; overflow: hidden; cursor: pointer;
+}
+
+/* غرفتي */
+.my-room-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); overflow: hidden;
+  cursor: pointer; position: relative; direction: rtl; transition: border-color .2s;
+}
+.my-room-card:hover { border-color: var(--accent); }
+.my-room-badge {
+  position: absolute; top: 10px; left: 10px;
+  background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 700; padding: 3px 12px;
+  border-radius: 20px; z-index: 2;
+}
+.my-room-body { display: flex; align-items: center; gap: 14px; padding: 16px; }
+.my-room-avatar {
+  width: 72px; height: 72px; border-radius: var(--radius-sm);
+  background: var(--bg-input); display: flex; align-items: center;
+  justify-content: center; font-size: 36px; flex-shrink: 0; overflow: hidden;
+}
+.my-room-info { flex: 1; }
+.my-room-name { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+.my-room-stats { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.my-room-online {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--online); font-weight: 600;
+}
+.my-room-online::before {
+  content: ''; width: 7px; height: 7px;
+  background: var(--online); border-radius: 50%;
+}
+
+/* فلاتر */
+.rooms-filter-tabs {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary); direction: rtl;
+}
+.rooms-filter-tab {
+  flex: 1; padding: 7px 8px; border: none; border-radius: 20px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  background: var(--bg-input); color: var(--text-secondary);
+  transition: all .2s; font-family: var(--font-main);
+}
+.rooms-filter-tab.active {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 2px 10px var(--accent-glow);
+}
+
+/* شبكة 2×2 — تستبدل القديمة */
+.rooms-list {
+  padding: 12px !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  flex-direction: unset !important;
+  align-content: start;
+}
+.room-card {
+  padding: 0 !important;
+  flex-direction: column !important;
+  align-items: unset !important;
+  transform: none !important;
+}
+.room-card:hover { border-color: var(--accent); transform: translateY(-2px) !important; }
+.room-avatar {
+  width: 100% !important; height: unset !important;
+  aspect-ratio: 1; border-radius: 0 !important;
+  font-size: 36px !important;
+}
+.room-info { padding: 8px; text-align: center; border-top: 1px solid var(--border); }
+.room-name { font-size: 13px; }
+.room-online {
+  justify-content: center;
+  font-size: 11px;
+}
+.public-room-badge { top: 8px; right: 8px; left: unset; }
+.empty-state { grid-column: 1 / -1; }
+.spinner { grid-column: 1 / -1; }
