@@ -1,0 +1,102 @@
+/* ═══════════════════════════════════════
+   ADDITIONS — append to end of style.css
+   • Mini badges in messages
+   • Photo upload in profile
+   • Room info modal tweaks
+═══════════════════════════════════════ */
+
+/* ── Mini badges beside sender name ── */
+.msg-badge-mini {
+  display: inline-flex;
+  align-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.msg-badge-mini svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* ── Level badge in message (tiny) ── */
+.msg-sender .level-micro svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Profile: change photo button ── */
+#btn-change-photo {
+  color: var(--accent-light);
+  border-color: rgba(124,77,255,0.3);
+}
+#btn-change-photo svg { color: var(--accent-light); }
+#btn-change-photo:hover { border-color: var(--accent); }
+
+/* ── Avatar upload option in setup ── */
+.upload-opt {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-style: dashed !important;
+  border-color: var(--accent) !important;
+  color: var(--accent);
+}
+.upload-opt.selected {
+  border-style: solid !important;
+  border-color: var(--gold) !important;
+}
+
+/* ── Profile avatar — photo display ── */
+.profile-avatar-big img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* ── Msg avatar — photo ── */
+.msg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ── View profile modal avatar — photo ── */
+.profile-modal-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ── Room info modal spinner ── */
+#modal-room-info .spinner {
+  width: 30px;
+  height: 30px;
+  margin: 16px auto;
+}
+
+/* ── Room info members row hover ── */
+#rinfo-members > div:hover {
+  background: var(--bg-hover) !important;
+}
+
+/* ── Room header clickable ── */
+#screen-room .room-info-sm {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  transition: background .15s;
+}
+#screen-room .room-info-sm:hover {
+  background: var(--bg-hover);
+}
+#screen-room .room-avatar-sm {
+  cursor: pointer;
+}
