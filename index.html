@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<!-- ════ AUTH ════ -->
+<!-- AUTH SCREEN -->
 <div id="screen-auth" class="screen active">
   <div class="auth-bg"></div>
   <div class="auth-box">
@@ -27,8 +27,12 @@
       <button class="auth-tab" data-tab="register">حساب جديد</button>
     </div>
     <div class="auth-form" id="form-login">
-      <div class="input-group"><input type="email" id="login-email" placeholder="البريد الإلكتروني" autocomplete="email"/></div>
-      <div class="input-group"><input type="password" id="login-pass" placeholder="كلمة المرور" autocomplete="current-password"/></div>
+      <div class="input-group">
+        <input type="email" id="login-email" placeholder="البريد الإلكتروني" autocomplete="email"/>
+      </div>
+      <div class="input-group">
+        <input type="password" id="login-pass" placeholder="كلمة المرور" autocomplete="current-password"/>
+      </div>
       <button class="btn-primary" id="btn-login">دخول</button>
       <div class="auth-divider">أو</div>
       <button class="btn-social" id="btn-google">
@@ -48,16 +52,22 @@
       </button>
     </div>
     <div class="auth-form hidden" id="form-register">
-      <div class="input-group"><input type="email" id="reg-email" placeholder="البريد الإلكتروني"/></div>
-      <div class="input-group"><input type="password" id="reg-pass" placeholder="كلمة المرور (6+ أحرف)"/></div>
-      <div class="input-group"><input type="password" id="reg-pass2" placeholder="تأكيد كلمة المرور"/></div>
+      <div class="input-group">
+        <input type="email" id="reg-email" placeholder="البريد الإلكتروني"/>
+      </div>
+      <div class="input-group">
+        <input type="password" id="reg-pass" placeholder="كلمة المرور (6+ أحرف)"/>
+      </div>
+      <div class="input-group">
+        <input type="password" id="reg-pass2" placeholder="تأكيد كلمة المرور"/>
+      </div>
       <button class="btn-primary" id="btn-register">إنشاء حساب</button>
     </div>
     <div class="auth-error" id="auth-error"></div>
   </div>
 </div>
 
-<!-- ════ SETUP ════ -->
+<!-- SETUP SCREEN -->
 <div id="screen-setup" class="screen">
   <div class="auth-bg"></div>
   <div class="setup-box">
@@ -100,7 +110,7 @@
   </div>
 </div>
 
-<!-- ════ MAIN APP ════ -->
+<!-- MAIN APP -->
 <div id="screen-app" class="screen">
   <div class="app-content">
 
@@ -110,7 +120,9 @@
         <h2>💬 الغرف</h2>
         <div class="header-actions">
           <button class="icon-btn" id="btn-create-room">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -123,7 +135,7 @@
       <div class="friends-search">
         <div class="search-input-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="friends-search-input" placeholder="ابحث بالاسم أو الـ ID..."/>
+          <input type="text" id="friends-search-input" placeholder="ابحث بالاسم..."/>
         </div>
       </div>
       <div class="friends-tabs">
@@ -134,47 +146,22 @@
       <div class="friends-list" id="friends-list"></div>
     </div>
 
-    <!-- Tab: Games -->
-    <div class="tab-panel" id="tab-games">
-      <div class="panel-header"><h2>🎮 الألعاب</h2></div>
-      <div class="games-grid">
-        <div class="game-card" id="game-uno">
-          <div class="game-icon">🃏</div>
-          <div class="game-name">UNO</div>
-          <div class="game-desc">العب مع أصدقائك</div>
-          <div class="game-badge">قريباً</div>
-        </div>
-        <div class="game-card" id="game-chess">
-          <div class="game-icon">♟️</div>
-          <div class="game-name">شطرنج</div>
-          <div class="game-desc">تحدِّ أصدقاءك</div>
-          <div class="game-badge">قريباً</div>
-        </div>
-        <div class="game-card" id="game-quiz">
-          <div class="game-icon">🧠</div>
-          <div class="game-name">مسابقة</div>
-          <div class="game-desc">اختبر معلوماتك</div>
-          <div class="game-badge">قريباً</div>
-        </div>
-        <div class="game-card" id="game-tictac">
-          <div class="game-icon">⭕</div>
-          <div class="game-name">XO</div>
-          <div class="game-desc">كلاسيكي وممتع</div>
-          <div class="game-badge">قريباً</div>
-        </div>
-      </div>
-    </div>
-
     <!-- Tab: Profile -->
     <div class="tab-panel" id="tab-profile">
       <div class="panel-header"><h2>👤 ملفي</h2></div>
       <div class="profile-scroll">
         <div class="profile-header">
           <div class="profile-avatar-wrap">
-            <div class="profile-avatar-big" id="profile-avi">👤</div>
+            <!-- Avatar clickable to change photo -->
+            <div class="profile-avatar-big" id="profile-avi" style="cursor:pointer" title="اضغط لتغيير الصورة">👤</div>
             <div class="profile-level-badge" id="profile-lvl-badge"></div>
+            <!-- hidden file input -->
+            <input type="file" id="profile-photo-input" accept="image/*" style="display:none"/>
+            <div class="profile-avi-edit-hint">📷</div>
           </div>
           <div class="profile-name" id="profile-username">—</div>
+          <!-- 3 badges shown next to name -->
+          <div class="profile-top-badges" id="profile-top-badges"></div>
           <div class="profile-id" id="profile-id">#000000</div>
           <div class="profile-country-gender" id="profile-country"></div>
           <div class="profile-bio" id="profile-bio-text">...</div>
@@ -196,6 +183,10 @@
           <div class="badges-grid" id="badges-grid"></div>
         </div>
         <div class="profile-actions">
+          <button class="btn-outline" id="btn-change-photo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            تغيير الصورة
+          </button>
           <button class="btn-outline" id="btn-edit-bio">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             تعديل النبذة
@@ -214,7 +205,7 @@
 
   </div>
 
-  <!-- Bottom Nav — 4 tabs -->
+  <!-- Bottom Nav -->
   <nav class="bottom-nav">
     <button class="nav-btn active" data-tab="rooms">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -225,10 +216,6 @@
       أصدقاء
       <span class="nav-badge hidden" id="friends-badge">0</span>
     </button>
-    <button class="nav-btn" data-tab="games">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="16" cy="12" r="1"/><circle cx="19" cy="10" r="1"/></svg>
-      ألعاب
-    </button>
     <button class="nav-btn" data-tab="profile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       ملفي
@@ -236,14 +223,15 @@
   </nav>
 </div>
 
-<!-- ════ ROOM CHAT ════ -->
+<!-- ROOM CHAT SCREEN -->
 <div id="screen-room" class="screen">
   <div class="chat-header">
     <button class="back-btn" id="btn-room-back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
-    <div class="room-avatar-sm" id="room-header-avi">🏠</div>
-    <div class="room-info-sm">
+    <!-- Room avatar/name clickable to show room info -->
+    <div class="room-avatar-sm" id="room-header-avi" style="cursor:pointer">🏠</div>
+    <div class="room-info-sm" style="cursor:pointer" id="room-header-info-btn">
       <div class="rname" id="room-header-name">الغرفة</div>
       <div class="ronline" id="room-online-count">0 متواجد</div>
     </div>
@@ -252,7 +240,6 @@
     </button>
   </div>
   <div class="chat-messages" id="chat-messages"></div>
-  <div class="members-panel" id="members-panel"></div>
   <div style="position:relative;flex-shrink:0">
     <div id="emoji-picker-room" class="emoji-picker hidden"></div>
     <div class="chat-input-area">
@@ -263,16 +250,17 @@
       </button>
     </div>
   </div>
+  <div class="members-panel" id="members-panel"></div>
 </div>
 
-<!-- ════ PRIVATE CHAT ════ -->
+<!-- PRIVATE CHAT SCREEN -->
 <div id="screen-private" class="screen">
   <div class="chat-header">
     <button class="back-btn" id="btn-private-back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
-    <div class="room-avatar-sm" id="private-header-avi">👤</div>
-    <div class="room-info-sm">
+    <div class="room-avatar-sm" id="private-header-avi" style="cursor:pointer">👤</div>
+    <div class="room-info-sm" style="cursor:pointer" id="private-header-info-btn">
       <div class="rname" id="private-header-name">...</div>
       <div class="ronline" id="private-header-status" style="color:var(--text-secondary)">غير متصل</div>
     </div>
@@ -294,7 +282,9 @@
   </div>
 </div>
 
-<!-- ════ MODALS ════ -->
+<!-- ════════════════ MODALS ════════════════ -->
+
+<!-- Create Room -->
 <div class="modal-overlay" id="modal-create-room">
   <div class="modal-box">
     <div class="modal-handle"></div>
@@ -307,11 +297,20 @@
       <label class="form-label">إيموجي الغرفة</label>
       <input class="form-input" id="room-avatar-input" placeholder="🏠" maxlength="4"/>
     </div>
+    <!-- Room photo upload (admin only) -->
+    <div class="form-group" id="room-photo-group" style="display:none">
+      <label class="form-label">📷 صورة الغرفة (للأدمن فقط)</label>
+      <div class="room-photo-preview" id="room-photo-preview">
+        <span>اضغط لاختيار صورة</span>
+      </div>
+      <input type="file" id="room-photo-input" accept="image/*" style="display:none"/>
+    </div>
     <button class="btn-primary" id="btn-save-room">إنشاء الغرفة</button>
-    <button class="btn-outline" onclick="closeModal('modal-create-room')" style="width:100%;justify-content:center;margin-top:8px">إلغاء</button>
+    <button class="btn-outline mt-8" onclick="closeModal('modal-create-room')" style="width:100%;justify-content:center;margin-top:8px">إلغاء</button>
   </div>
 </div>
 
+<!-- Edit Bio -->
 <div class="modal-overlay" id="modal-edit-bio">
   <div class="modal-box">
     <div class="modal-handle"></div>
@@ -322,6 +321,7 @@
   </div>
 </div>
 
+<!-- Change Username -->
 <div class="modal-overlay" id="modal-change-username">
   <div class="modal-box">
     <div class="modal-handle"></div>
@@ -333,33 +333,67 @@
   </div>
 </div>
 
+<!-- View Profile (slide-up from bottom) -->
 <div class="modal-overlay" id="modal-view-profile">
-  <div class="modal-box">
+  <div class="modal-box profile-view-box">
     <div class="modal-handle"></div>
-    <div class="profile-modal-avatar" id="view-profile-avi">👤</div>
-    <div style="text-align:center">
-      <div class="profile-name" id="view-profile-name" style="font-size:18px"></div>
-      <div class="profile-id" id="view-profile-id"></div>
-      <div style="font-size:12px;color:var(--text-secondary);margin:3px 0" id="view-profile-level"></div>
-      <div style="font-size:12px;color:var(--text-secondary);margin:3px 0" id="view-profile-country"></div>
-      <div style="font-size:12px;margin:8px 0" id="view-profile-online"></div>
+    <div class="profile-view-header">
+      <div class="profile-modal-avatar" id="view-profile-avi">👤</div>
+      <div class="profile-view-info">
+        <div class="profile-name" id="view-profile-name" style="font-size:18px"></div>
+        <div id="view-profile-top-badges" style="display:flex;gap:4px;align-items:center;margin:4px 0;flex-wrap:wrap"></div>
+        <div class="profile-id" id="view-profile-id"></div>
+        <div style="font-size:12px;color:var(--text-secondary);margin:2px 0" id="view-profile-level"></div>
+        <div style="font-size:12px;color:var(--text-secondary);margin:2px 0" id="view-profile-country"></div>
+        <div style="font-size:12px;margin:6px 0" id="view-profile-online"></div>
+      </div>
     </div>
     <div style="background:var(--bg-input);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--text-secondary);margin:12px 0;line-height:1.6" id="view-profile-bio"></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:8px" id="view-profile-badges"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;margin-bottom:8px" id="view-profile-badges"></div>
     <div id="view-profile-actions"></div>
     <button class="btn-outline" onclick="closeModal('modal-view-profile')" style="width:100%;justify-content:center;margin-top:8px">إغلاق</button>
   </div>
 </div>
 
+<!-- Room Info Modal -->
+<div class="modal-overlay" id="modal-room-info">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="room-info-avatar" id="room-info-avi">🏠</div>
+    <div class="modal-title" id="room-info-name" style="margin-top:8px">الغرفة</div>
+    <div class="room-info-stats">
+      <div class="room-info-stat">
+        <div class="room-info-stat-num" id="room-info-members">0</div>
+        <div class="room-info-stat-lbl">منضم</div>
+      </div>
+      <div class="room-info-stat">
+        <div class="room-info-stat-num" id="room-info-online">0</div>
+        <div class="room-info-stat-lbl">متواجد الآن</div>
+      </div>
+    </div>
+    <div id="room-info-join-section" style="margin-top:12px"></div>
+    <!-- Admin: change room photo -->
+    <div id="room-info-admin-section" style="display:none;margin-top:12px">
+      <button class="btn-outline" id="btn-change-room-photo" style="width:100%;justify-content:center">
+        📷 تغيير صورة الغرفة
+      </button>
+      <input type="file" id="room-photo-change-input" accept="image/*" style="display:none"/>
+    </div>
+    <button class="btn-outline" onclick="closeModal('modal-room-info')" style="width:100%;justify-content:center;margin-top:8px">إغلاق</button>
+  </div>
+</div>
+
+<!-- Toast -->
 <div id="app-toast" class="toast"></div>
 
-<script src="firebase-config.js?v=1777434631"></script>
-<script src="scripts/utils.js?v=1777434631"></script>
-<script src="scripts/auth.js?v=1777434631"></script>
-<script src="scripts/profile.js?v=1777434631"></script>
-<script src="scripts/rooms.js?v=1777434631"></script>
-<script src="scripts/friends.js?v=1777434631"></script>
-<script src="scripts/chat.js?v=1777434631"></script>
-<script src="scripts/app.js?v=1777434631"></script>
+<!-- Scripts -->
+<script src="firebase-config.js"></script>
+<script src="scripts/utils.js"></script>
+<script src="scripts/auth.js"></script>
+<script src="scripts/profile.js"></script>
+<script src="scripts/rooms.js"></script>
+<script src="scripts/friends.js"></script>
+<script src="scripts/chat.js"></script>
+<script src="scripts/app.js"></script>
 </body>
 </html>
