@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8"/>
@@ -6,6 +7,7 @@
   <meta name="theme-color" content="#0E0E1A"/>
   <title>ChatVibe</title>
   <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style-additions.css"/>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -14,6 +16,7 @@
 <body>
 
 <!-- ════ AUTH ════ -->
+
 <div id="screen-auth" class="screen active">
   <div class="auth-bg"></div>
   <div class="auth-box">
@@ -58,6 +61,7 @@
 </div>
 
 <!-- ════ SETUP ════ -->
+
 <div id="screen-setup" class="screen">
   <div class="auth-bg"></div>
   <div class="setup-box">
@@ -81,7 +85,7 @@
     </div>
     <div class="setup-step" id="setup-step-3">
       <div class="setup-title">🎭 اختر صورتك</div>
-      <div class="setup-sub">اختر شخصية تعبر عنك</div>
+      <div class="setup-sub">اختر شخصية أو ارفع صورتك</div>
       <div class="avatar-grid" id="avatar-grid"></div>
       <div style="display:flex;gap:10px;margin-top:4px">
         <button class="btn-primary" id="btn-setup-next3" style="flex:1">التالي →</button>
@@ -101,120 +105,139 @@
 </div>
 
 <!-- ════ MAIN APP ════ -->
+
 <div id="screen-app" class="screen">
   <div class="app-content">
 
-    <!-- Tab: Rooms -->
-    <div class="tab-panel active" id="tab-rooms">
-      <div class="panel-header">
-        <h2>💬 الغرف</h2>
-        <div class="header-actions">
-          <button class="icon-btn" id="btn-create-room">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-        </div>
+```
+<!-- Tab: Rooms -->
+<div class="tab-panel active" id="tab-rooms">
+  <div class="panel-header">
+    <h2>💬 الغرف</h2>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-create-room">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="rooms-list" id="rooms-list"></div>
+</div>
+
+<!-- Tab: Friends -->
+<div class="tab-panel" id="tab-friends">
+  <div class="panel-header"><h2>👥 الأصدقاء</h2></div>
+  <div class="friends-search">
+    <div class="search-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="friends-search-input" placeholder="ابحث بالاسم أو الـ ID..."/>
+    </div>
+  </div>
+  <div class="friends-tabs">
+    <button class="friends-tab active" data-tab="friends">الأصدقاء</button>
+    <button class="friends-tab" data-tab="requests">الطلبات</button>
+    <button class="friends-tab" data-tab="search">بحث</button>
+  </div>
+  <div class="friends-list" id="friends-list"></div>
+</div>
+
+<!-- Tab: Games -->
+<div class="tab-panel" id="tab-games">
+  <div class="panel-header"><h2>🎮 الألعاب</h2></div>
+  <div class="games-grid">
+    <div class="game-card" id="game-uno">
+      <div class="game-icon">🃏</div>
+      <div class="game-name">UNO</div>
+      <div class="game-desc">العب مع أصدقائك</div>
+      <div class="game-badge">قريباً</div>
+    </div>
+    <div class="game-card" id="game-chess">
+      <div class="game-icon">♟️</div>
+      <div class="game-name">شطرنج</div>
+      <div class="game-desc">تحدِّ أصدقاءك</div>
+      <div class="game-badge">قريباً</div>
+    </div>
+    <div class="game-card" id="game-quiz">
+      <div class="game-icon">🧠</div>
+      <div class="game-name">مسابقة</div>
+      <div class="game-desc">اختبر معلوماتك</div>
+      <div class="game-badge">قريباً</div>
+    </div>
+    <div class="game-card" id="game-tictac">
+      <div class="game-icon">⭕</div>
+      <div class="game-name">XO</div>
+      <div class="game-desc">كلاسيكي وممتع</div>
+      <div class="game-badge">قريباً</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Profile -->
+<div class="tab-panel" id="tab-profile">
+  <div class="panel-header"><h2>👤 ملفي</h2></div>
+  <div class="profile-scroll">
+    <div class="profile-header">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar-big" id="profile-avi">👤</div>
+        <div class="profile-level-badge" id="profile-lvl-badge"></div>
       </div>
-      <div class="rooms-list" id="rooms-list"></div>
+      <div class="profile-name" id="profile-username">—</div>
+      <div class="profile-id" id="profile-id">#000000</div>
+      <div class="profile-country-gender" id="profile-country"></div>
+      <div class="profile-bio" id="profile-bio-text">...</div>
+    </div>
+    <div class="level-section">
+      <div class="level-header">
+        <span class="level-label" id="profile-level-label">المستوى 0</span>
+        <span class="level-xp" id="profile-xp-label">0 / 900 XP</span>
+      </div>
+      <div class="level-bar-bg"><div class="level-bar-fill" id="profile-level-bar" style="width:0%"></div></div>
+    </div>
+    <div class="profile-stats">
+      <div class="stat-box"><div class="stat-num" id="stat-friends">0</div><div class="stat-lbl">صديق</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-messages">0</div><div class="stat-lbl">رسالة</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-days">0</div><div class="stat-lbl">يوم حضور</div></div>
+    </div>
+    <div class="badges-section">
+      <div class="section-label">🏅 شاراتي</div>
+      <div class="badges-grid" id="badges-grid"></div>
     </div>
 
-    <!-- Tab: Friends -->
-    <div class="tab-panel" id="tab-friends">
-      <div class="panel-header"><h2>👥 الأصدقاء</h2></div>
-      <div class="friends-search">
-        <div class="search-input-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="friends-search-input" placeholder="ابحث بالاسم أو الـ ID..."/>
-        </div>
-      </div>
-      <div class="friends-tabs">
-        <button class="friends-tab active" data-tab="friends">الأصدقاء</button>
-        <button class="friends-tab" data-tab="requests">الطلبات</button>
-        <button class="friends-tab" data-tab="search">بحث</button>
-      </div>
-      <div class="friends-list" id="friends-list"></div>
-    </div>
+    <!-- ═══ profile-actions ═══ -->
+    <div class="profile-actions">
 
-    <!-- Tab: Games -->
-    <div class="tab-panel" id="tab-games">
-      <div class="panel-header"><h2>🎮 الألعاب</h2></div>
-      <div class="games-grid">
-        <div class="game-card" id="game-uno">
-          <div class="game-icon">🃏</div>
-          <div class="game-name">UNO</div>
-          <div class="game-desc">العب مع أصدقائك</div>
-          <div class="game-badge">قريباً</div>
-        </div>
-        <div class="game-card" id="game-chess">
-          <div class="game-icon">♟️</div>
-          <div class="game-name">شطرنج</div>
-          <div class="game-desc">تحدِّ أصدقاءك</div>
-          <div class="game-badge">قريباً</div>
-        </div>
-        <div class="game-card" id="game-quiz">
-          <div class="game-icon">🧠</div>
-          <div class="game-name">مسابقة</div>
-          <div class="game-desc">اختبر معلوماتك</div>
-          <div class="game-badge">قريباً</div>
-        </div>
-        <div class="game-card" id="game-tictac">
-          <div class="game-icon">⭕</div>
-          <div class="game-name">XO</div>
-          <div class="game-desc">كلاسيكي وممتع</div>
-          <div class="game-badge">قريباً</div>
-        </div>
-      </div>
-    </div>
+      <!-- ★ زر تغيير الصورة — جديد -->
+      <button class="btn-outline" id="btn-change-photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        تغيير الصورة الشخصية
+      </button>
 
-    <!-- Tab: Profile -->
-    <div class="tab-panel" id="tab-profile">
-      <div class="panel-header"><h2>👤 ملفي</h2></div>
-      <div class="profile-scroll">
-        <div class="profile-header">
-          <div class="profile-avatar-wrap">
-            <div class="profile-avatar-big" id="profile-avi">👤</div>
-            <div class="profile-level-badge" id="profile-lvl-badge"></div>
-          </div>
-          <div class="profile-name" id="profile-username">—</div>
-          <div class="profile-id" id="profile-id">#000000</div>
-          <div class="profile-country-gender" id="profile-country"></div>
-          <div class="profile-bio" id="profile-bio-text">...</div>
-        </div>
-        <div class="level-section">
-          <div class="level-header">
-            <span class="level-label" id="profile-level-label">المستوى 0</span>
-            <span class="level-xp" id="profile-xp-label">0 / 900 XP</span>
-          </div>
-          <div class="level-bar-bg"><div class="level-bar-fill" id="profile-level-bar" style="width:0%"></div></div>
-        </div>
-        <div class="profile-stats">
-          <div class="stat-box"><div class="stat-num" id="stat-friends">0</div><div class="stat-lbl">صديق</div></div>
-          <div class="stat-box"><div class="stat-num" id="stat-messages">0</div><div class="stat-lbl">رسالة</div></div>
-          <div class="stat-box"><div class="stat-num" id="stat-days">0</div><div class="stat-lbl">يوم حضور</div></div>
-        </div>
-        <div class="badges-section">
-          <div class="section-label">🏅 شاراتي</div>
-          <div class="badges-grid" id="badges-grid"></div>
-        </div>
-        <div class="profile-actions">
-          <button class="btn-outline" id="btn-edit-bio">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            تعديل النبذة
-          </button>
-          <button class="btn-outline" id="btn-change-username">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            تغيير الاسم
-          </button>
-          <button class="btn-outline btn-logout" id="btn-logout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            تسجيل الخروج
-          </button>
-        </div>
-      </div>
+      <button class="btn-outline" id="btn-edit-bio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        تعديل النبذة
+      </button>
+
+      <button class="btn-outline" id="btn-change-username">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        تغيير الاسم
+      </button>
+
+      <button class="btn-outline btn-logout" id="btn-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        تسجيل الخروج
+      </button>
+
     </div>
+  </div>
+</div>
+```
 
   </div>
 
-  <!-- Bottom Nav — 4 tabs -->
+  <!-- Bottom Nav -->
+
   <nav class="bottom-nav">
     <button class="nav-btn active" data-tab="rooms">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -237,6 +260,7 @@
 </div>
 
 <!-- ════ ROOM CHAT ════ -->
+
 <div id="screen-room" class="screen">
   <div class="chat-header">
     <button class="back-btn" id="btn-room-back">
@@ -266,6 +290,7 @@
 </div>
 
 <!-- ════ PRIVATE CHAT ════ -->
+
 <div id="screen-private" class="screen">
   <div class="chat-header">
     <button class="back-btn" id="btn-private-back">
@@ -295,6 +320,7 @@
 </div>
 
 <!-- ════ MODALS ════ -->
+
 <div class="modal-overlay" id="modal-create-room">
   <div class="modal-box">
     <div class="modal-handle"></div>
@@ -354,12 +380,20 @@
 <div id="app-toast" class="toast"></div>
 
 <script src="firebase-config.js?v=1777434631"></script>
+
 <script src="scripts/utils.js?v=1777434631"></script>
+
 <script src="scripts/auth.js?v=1777434631"></script>
+
 <script src="scripts/profile.js?v=1777434631"></script>
+
 <script src="scripts/rooms.js?v=1777434631"></script>
+
 <script src="scripts/friends.js?v=1777434631"></script>
+
 <script src="scripts/chat.js?v=1777434631"></script>
+
 <script src="scripts/app.js?v=1777434631"></script>
+
 </body>
 </html>
